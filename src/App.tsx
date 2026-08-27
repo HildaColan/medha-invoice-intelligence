@@ -1,0 +1,11 @@
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/router/AppRouter";
+import { ToastProvider } from "@/components/ui";
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
+  );
+}
