@@ -40,6 +40,60 @@ export interface Product {
   hsn: string;
   duty: string;
   status: ProductStatus;
+  customer: string;
+}
+
+export type CustomerStatus = "Active" | "Inactive";
+
+export interface Customer {
+  id: string;
+  name: string;
+  code: string;
+  gstin: string;
+  email: string;
+  phone: string;
+  status: CustomerStatus;
+}
+
+export type MasterEntryStatus = "Active" | "Inactive";
+
+export interface MasterEntry {
+  id: string;
+  code: string;
+  name: string;
+  status: MasterEntryStatus;
+}
+
+export type MasterCategoryKey =
+  | "shipmentModes"
+  | "shipmentTypes"
+  | "locations"
+  | "portCodes"
+  | "billingCustomers"
+  | "importersExporters";
+
+export type ValidationRuleType = "Mandatory" | "Calculation" | "Duplicate check" | "Master validation";
+
+export interface ValidationRule {
+  id: string;
+  field: string;
+  ruleType: ValidationRuleType;
+  condition: string;
+  enabled: boolean;
+}
+
+export interface OutputFieldMapping {
+  id: string;
+  internalField: string;
+  outputField: string;
+}
+
+export interface OutputTemplate {
+  id: string;
+  name: string;
+  createdAt: string;
+  createdBy: string;
+  fields: OutputFieldMapping[];
 }
 
 export type UserStatus = "Active" | "Deactivated";
@@ -74,6 +128,7 @@ export interface AppNotification {
 }
 
 export interface AuditEntry {
+  id: string;
   user: string;
   action: string;
   ref: string;
@@ -101,28 +156,22 @@ export type AdminViewKey =
   | "users"
   | "roles"
   | "productMaster"
+  | "customerMaster"
   | "masters"
   | "validationRules"
   | "outputMapping"
   | "auditLogs";
 
+export type PermissionAction = "view" | "create" | "edit" | "delete";
+
+export type ModulePermissions = Record<PermissionAction, boolean>;
+
+export type RolePermissions = Record<string, ModulePermissions>;
+
 export interface Role {
   id: string;
   name: string;
   description: string;
+  permissions: RolePermissions;
 }
 
-export interface Session {
-  id: string;
-  device: string;
-  loc: string;
-  time: string;
-  current: boolean;
-}
-
-export interface NotificationPreferences {
-  jobComplete: boolean;
-  jobFailed: boolean;
-  exportReady: boolean;
-  weeklyDigest: boolean;
-}

@@ -12,6 +12,5 @@ export function getPageTitle(pathname: string): string {
   if (pathname === "/notifications") return "Notifications";
   if (pathname.startsWith("/administration")) return "Administration";
   if (pathname === "/profile") return "My Profile";
-  if (pathname === "/account-settings") return "Account Settings";
   return "MEDHA";
 }
