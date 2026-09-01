@@ -1,14 +1,14 @@
-import { Briefcase, Building2, Camera, Clock, FileCheck2, FileOutput, MapPin } from "lucide-react";
+import { Building2, Camera, Clock, MapPin } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
-import { Field, SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
+import { Field, SectionHeading, useToast } from "@/components/ui";
 
 const CURRENT_USER_NAME = "Priya Raghavan";
 
-const ACTIVITY_STATS = [
-  { icon: Briefcase, label: "Jobs created", value: "38", accent: T.brass },
-  { icon: FileOutput, label: "Exports generated", value: "19", accent: T.teal },
-  { icon: FileCheck2, label: "Validations approved", value: "112", accent: T.slate },
-] as const;
+// const ACTIVITY_STATS = [
+//   { icon: Briefcase, label: "Jobs created", value: "38", accent: T.brass },
+//   { icon: FileOutput, label: "Exports generated", value: "19", accent: T.teal },
+//   { icon: FileCheck2, label: "Validations approved", value: "112", accent: T.slate },
+// ] as const;
 
 export function ProfileView() {
   const notify = useToast();
