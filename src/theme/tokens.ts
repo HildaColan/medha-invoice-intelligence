@@ -2,8 +2,8 @@ import type { CSSProperties } from "react";
 
 /* ---------------------------------------------------------------
    MEDHA — AI Invoice Extraction System
-   Theme: Transorion brand palette — Orange with White
-   Charcoal Ink #221A14 · Warm Paper #FBF6F1 · Transorion Orange #E0600C
+   Theme: Transorion brand palette — Orange-Red with White
+   Charcoal Ink #221A14 · Warm Paper #FBF6F1 · Transorion Vermillion #D8431F
    Manifest Teal #1C7C74 (success) · Alert Red #C1392B (error) · Warm Slate #4A3F35
    Display: Fraunces | Body: IBM Plex Sans | Data: IBM Plex Mono
 ----------------------------------------------------------------*/
@@ -13,9 +13,9 @@ export const T = {
   inkSoft: "#332921",
   mist: "#FBF6F1",
   card: "#FFFFFF",
-  brass: "#E0600C",
-  brassDeep: "#C2530B",
-  brassSoft: "#FBE4CF",
+  brass: "#D8431F",
+  brassDeep: "#AD3315",
+  brassSoft: "#FBDFD1",
   teal: "#1C7C74",
   tealSoft: "#DCEEEC",
   rust: "#C1392B",

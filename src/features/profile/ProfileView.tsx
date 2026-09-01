@@ -1,7 +1,6 @@
 import { Briefcase, Building2, Camera, Clock, FileCheck2, FileOutput, MapPin } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { Field, SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
-import { AUDIT } from "@/data";
 
 const CURRENT_USER_NAME = "Priya Raghavan";
 
@@ -68,13 +67,13 @@ export function ProfileView() {
             <Field label="Job title" value="Trade Operations Lead" />
             <Field label="Email address" value="admin@transorion.com" mono />
             <Field label="Phone number" value="+91 98400 12345" mono />
-            <Field label="Department" value="Trade Compliance" />
+            {/* <Field label="Department" value="Trade Compliance" /> */}
             <Field label="Role" value="Administrator" disabled />
           </div>
         </div>
       </div>
 
-      <SectionHeading title="Activity summary" />
+      {/* <SectionHeading title="Activity summary" />
       <div className="flex gap-4 flex-wrap mb-6">
         {ACTIVITY_STATS.map((s) => (
           <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} />
@@ -100,7 +99,7 @@ export function ProfileView() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div> */}
     </div>
   );
 }

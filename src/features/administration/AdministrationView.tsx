@@ -3,6 +3,7 @@ import { SectionHeading } from "@/components/ui";
 import { paths } from "@/router/paths";
 import type { AdminViewKey } from "@/types";
 import { AuditLogsPanel } from "./panels/AuditLogsPanel";
+import { CustomerMasterPanel } from "./panels/CustomerMasterPanel";
 import { MastersPanel } from "./panels/MastersPanel";
 import { OutputMappingPanel } from "./panels/OutputMappingPanel";
 import { ProductMasterPanel } from "./panels/ProductMasterPanel";
@@ -14,6 +15,7 @@ const TITLES: Record<AdminViewKey, string> = {
   users: "Users",
   roles: "Roles & permissions",
   productMaster: "Product master",
+  customerMaster: "Customer master",
   masters: "Masters",
   validationRules: "Validation rules",
   outputMapping: "Output mapping",
@@ -24,6 +26,7 @@ const PANELS: Record<AdminViewKey, () => JSX.Element> = {
   users: UsersPanel,
   roles: RolesPanel,
   productMaster: ProductMasterPanel,
+  customerMaster: CustomerMasterPanel,
   masters: MastersPanel,
   validationRules: ValidationRulesPanel,
   outputMapping: OutputMappingPanel,
