@@ -8,6 +8,7 @@ import { CreateJobView } from "@/features/jobs/CreateJobView";
 import { JobDetailView } from "@/features/jobs/JobDetailView";
 import { ExportsView } from "@/features/exports/ExportsView";
 import { NotificationsView } from "@/features/notifications/NotificationsView";
+import { ReportsView } from "@/features/reports/ReportsView";
 import { AdministrationView } from "@/features/administration/AdministrationView";
 import { ProfileView } from "@/features/profile/ProfileView";
 import { paths } from "./paths";
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
           { path: "/jobs/:id", element: <JobDetailView /> },
           { path: paths.exports, element: <ExportsView /> },
           { path: paths.notifications, element: <NotificationsView /> },
+          { path: paths.reports, element: <ReportsView /> },
           { path: "/administration", element: <Navigate to={paths.administration("users")} replace /> },
           { path: "/administration/:view", element: <AdministrationView /> },
           { path: paths.profile, element: <ProfileView /> },

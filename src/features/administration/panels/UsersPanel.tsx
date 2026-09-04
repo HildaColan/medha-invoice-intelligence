@@ -5,7 +5,7 @@ import { Field, Modal, SelectField, Td, Th, useToast } from "@/components/ui";
 import { ROLES, USERS } from "@/data";
 import type { AppUser, UserStatus } from "@/types";
 
-const EMPTY_USER: AppUser = { name: "", email: "", role: "Operational User", status: "Active" };
+const EMPTY_USER: AppUser = { name: "", email: "", role: "HOD", status: "Active" };
 const STATUS_OPTIONS: readonly UserStatus[] = ["Active", "Deactivated"];
 const CURRENT_USER_EMAIL = "priya.r@transorion.com";
 

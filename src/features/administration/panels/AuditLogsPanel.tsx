@@ -1,145 +1,135 @@
-import { useState } from "react";
-import { PenLine, Plus, Trash2 } from "lucide-react";
-import { T, fontBody } from "@/theme/tokens";
-import { Field, Modal, SelectField, Td, Th } from "@/components/ui";
-import { AUDIT, USERS } from "@/data";
-import type { AuditEntry } from "@/types";
+import { useMemo, useState } from "react";
+import { CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
+import { T, fontBody, fontMono } from "@/theme/tokens";
+import { SelectField, Td, Th } from "@/components/ui";
+import { AUDIT } from "@/data";
 
-const USER_OPTIONS = ["System", ...USERS.map((u) => u.name)];
-
-function nowLabel(): string {
-  const datePart = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const timePart = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  return `${datePart}, ${timePart}`;
-}
-
-function emptyEntry(): AuditEntry {
-  return { id: "", user: USER_OPTIONS[0], action: "", ref: "", time: nowLabel() };
-}
+const ALL = "All";
 
 export function AuditLogsPanel() {
-  const [logs, setLogs] = useState<AuditEntry[]>(AUDIT);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<AuditEntry>(emptyEntry());
-  const [error, setError] = useState<string | null>(null);
+  const userOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.user)))], []);
+  const moduleOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.module)))], []);
+  const actionOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.action)))], []);
+  const resultOptions = [ALL, "Success", "Failed"] as const;
 
-  const openAdd = () => {
-    setEditingId(null);
-    setForm(emptyEntry());
-    setError(null);
-    setModalOpen(true);
-  };
+  const [user, setUser] = useState(ALL);
+  const [module, setModule] = useState(ALL);
+  const [action, setAction] = useState(ALL);
+  const [result, setResult] = useState<string>(ALL);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
-  const openEdit = (entry: AuditEntry) => {
-    setEditingId(entry.id);
-    setForm(entry);
-    setError(null);
-    setModalOpen(true);
-  };
+  const filtered = AUDIT.filter((a) => {
+    if (user !== ALL && a.user !== user) return false;
+    if (module !== ALL && a.module !== module) return false;
+    if (action !== ALL && a.action !== action) return false;
+    if (result !== ALL && a.result !== result) return false;
+    const entryDate = new Date(a.time.replace(",", ""));
+    if (fromDate && entryDate < new Date(fromDate)) return false;
+    if (toDate && entryDate > new Date(`${toDate}T23:59:59`)) return false;
+    return true;
+  });
 
-  const close = () => setModalOpen(false);
-
-  const save = () => {
-    if (!form.action.trim() || !form.ref.trim()) {
-      setError("Action and Reference are required.");
-      return;
-    }
-    setLogs((prev) => {
-      if (editingId) {
-        return prev.map((l) => (l.id === editingId ? form : l));
-      }
-      const id = `audit-${Date.now()}`;
-      return [{ ...form, id }, ...prev];
-    });
-    setModalOpen(false);
-  };
-
-  const remove = (entry: AuditEntry) => {
-    if (window.confirm(`Remove this audit log entry for "${entry.action}"?`)) {
-      setLogs((prev) => prev.filter((l) => l.id !== entry.id));
-    }
+  const clearFilters = () => {
+    setUser(ALL);
+    setModule(ALL);
+    setAction(ALL);
+    setResult(ALL);
+    setFromDate("");
+    setToDate("");
   };
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold"
-          style={{ background: T.brass, color: "#fff", ...fontBody }}
-        >
-          <Plus size={15} /> Add entry
-        </button>
+      <div className="rounded-2xl p-5 mb-5 flex items-start gap-3" style={{ background: T.tealSoft, border: `1px solid ${T.teal}33` }}>
+        <ShieldCheck size={18} color={T.teal} className="mt-0.5 shrink-0" />
+        <div style={{ ...fontBody, color: T.slate, fontSize: 12.5 }}>
+          <span style={{ fontWeight: 700, color: T.ink }}>System-generated and tamper-resistant. </span>
+          Every action performed in MEDHA is captured automatically. Entries cannot be added, edited, or deleted —
+          this log exists to provide traceability and support compliance review.
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4 mb-5 grid grid-cols-6 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+        <SelectField label="User" value={user} onChange={setUser} options={userOptions} />
+        <SelectField label="Module" value={module} onChange={setModule} options={moduleOptions} />
+        <SelectField label="Activity Type" value={action} onChange={setAction} options={actionOptions} />
+        <SelectField label="Status" value={result} onChange={setResult} options={resultOptions} />
+        <div>
+          <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>From</label>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
+            style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+          />
+        </div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
+              style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+            />
+          </div>
+          <button
+            onClick={clearFilters}
+            className="px-3.5 py-2.5 rounded-lg text-[12.5px] font-semibold shrink-0"
+            style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
         <table className="w-full">
           <thead>
-            <tr><Th>User</Th><Th>Action</Th><Th>Reference</Th><Th>Timestamp</Th><Th></Th></tr>
+            <tr>
+              <Th>User</Th><Th>Action</Th><Th>Module</Th><Th>Reference</Th>
+              <Th>Previous → Updated</Th><Th>Status</Th><Th>Timestamp</Th>
+            </tr>
           </thead>
           <tbody>
-            {logs.map((a) => (
+            {filtered.map((a) => (
               <tr key={a.id}>
                 <Td>{a.user}</Td>
                 <Td>{a.action}</Td>
+                <Td>{a.module}</Td>
                 <Td mono>{a.ref}</Td>
-                <Td mono>{a.time}</Td>
-                <Td>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(a)} aria-label={`Edit entry ${a.action}`}>
-                      <PenLine size={14} color={T.slateSoft} />
-                    </button>
-                    <button onClick={() => remove(a)} aria-label={`Remove entry ${a.action}`}>
-                      <Trash2 size={14} color={T.rust} />
-                    </button>
-                  </div>
+                <Td mono>
+                  {a.previousValue || a.updatedValue ? (
+                    <span style={{ color: T.slateSoft }}>
+                      {a.previousValue ?? "—"} <span style={{ color: T.hair }}>→</span> <span style={{ color: T.ink, fontWeight: 600 }}>{a.updatedValue ?? "—"}</span>
+                    </span>
+                  ) : (
+                    <span style={{ color: T.slateSoft }}>—</span>
+                  )}
                 </Td>
+                <Td>
+                  {a.result === "Success" ? (
+                    <span className="flex items-center gap-1 text-[12px]" style={{ ...fontBody, color: T.teal, fontWeight: 600 }}>
+                      <CheckCircle2 size={13} /> Success
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[12px]" style={{ ...fontBody, color: T.rust, fontWeight: 600 }}>
+                      <XCircle size={13} /> Failed
+                    </span>
+                  )}
+                </Td>
+                <Td mono>{a.time}</Td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-[12.5px]" style={{ ...fontBody, color: T.slateSoft }}>No activity matches the selected filters.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
-
-      <Modal
-        open={modalOpen}
-        title={editingId ? "Edit audit log entry" : "Add audit log entry"}
-        onClose={close}
-        width={480}
-        footer={
-          <>
-            <button
-              onClick={close}
-              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold"
-              style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={save}
-              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold"
-              style={{ background: T.brass, color: "#fff", ...fontBody }}
-            >
-              {editingId ? "Save changes" : "Add entry"}
-            </button>
-          </>
-        }
-      >
-        <div className="flex flex-col gap-4">
-          <SelectField
-            label="User"
-            value={form.user}
-            onChange={(v) => setForm({ ...form, user: v })}
-            options={USER_OPTIONS}
-          />
-          <Field label="Action" value={form.action} onChange={(v) => setForm({ ...form, action: v })} />
-          <Field label="Reference" value={form.ref} onChange={(v) => setForm({ ...form, ref: v })} mono />
-          <Field label="Timestamp" value={form.time} onChange={(v) => setForm({ ...form, time: v })} mono />
-        </div>
-        {error && (
-          <div className="mt-4 text-[12.5px]" style={{ ...fontBody, color: T.rust }}>{error}</div>
-        )}
-      </Modal>
     </>
   );
 }
