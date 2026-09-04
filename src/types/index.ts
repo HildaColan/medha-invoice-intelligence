@@ -65,6 +65,7 @@ export interface MasterEntry {
 }
 
 export type MasterCategoryKey =
+  | "forwarders"
   | "shipmentModes"
   | "shipmentTypes"
   | "locations"
@@ -127,12 +128,29 @@ export interface AppNotification {
   kind: NotificationKind;
 }
 
+export type AuditResult = "Success" | "Failed";
+
 export interface AuditEntry {
   id: string;
   user: string;
   action: string;
+  module: string;
   ref: string;
+  previousValue?: string;
+  updatedValue?: string;
+  result: AuditResult;
   time: string;
+}
+
+export type InvoiceNumberStatus = "New" | "Duplicate";
+
+export interface JobInvoiceNumber {
+  id: string;
+  number: string;
+  sourceFile: string;
+  status: InvoiceNumberStatus;
+  /** Prior job this invoice number was already seen on, when status is "Duplicate" */
+  duplicateOf?: string;
 }
 
 export interface TrendPoint {
@@ -173,5 +191,36 @@ export interface Role {
   name: string;
   description: string;
   permissions: RolePermissions;
+}
+
+export type ReportJobStatus = "Completed" | "Pending" | "Rework";
+
+export interface UserActivityReportRow {
+  id: string;
+  user: string;
+  role: string;
+  jobNumber: string;
+  date: string;
+  startTime: string;
+  completionTime: string;
+  turnaround: string;
+  recordsProcessed: number;
+  rework: boolean;
+  lastActivity: string;
+  status: ReportJobStatus;
+}
+
+export interface DailyJobStat {
+  day: string;
+  completed: number;
+  pending: number;
+}
+
+export interface DownloadableDataset {
+  id: string;
+  name: string;
+  description: string;
+  /** Records available to export in this preview; undefined means not yet populated */
+  recordCount?: number;
 }
 

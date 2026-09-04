@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Briefcase, FilePlus2, FileOutput, Bell,
   ShieldCheck, SlidersHorizontal, ListChecks, ScrollText, Users,
   UserCircle2, ChevronDown, ChevronRight, LogOut, Settings2, Boxes,
-  Building2,
+  Building2, BarChart3,
 } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths, ADMIN_VIEWS } from "@/router/paths";
@@ -26,6 +26,7 @@ const NAV: NavItem[] = [
   { key: "createJob", label: "Create Job", icon: FilePlus2, path: paths.createJob },
   { key: "exports", label: "Exports", icon: FileOutput, path: paths.exports },
   { key: "notifications", label: "Notifications", icon: Bell, path: paths.notifications, badge: 3 },
+  { key: "reports", label: "Reports", icon: BarChart3, path: paths.reports },
 ];
 
 const ADMIN_LABELS: Record<AdminViewKey, string> = {

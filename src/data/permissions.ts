@@ -3,7 +3,7 @@ import type { ModulePermissions, PermissionAction, RolePermissions } from "@/typ
 export interface PermissionModule {
   key: string;
   label: string;
-  group: "General" | "Administration";
+  group: "General" | "Administration" | "Reports";
 }
 
 export const PERMISSION_ACTIONS: PermissionAction[] = ["view", "create", "edit", "delete"];
@@ -14,6 +14,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: "createJob", label: "Create Job", group: "General" },
   { key: "exports", label: "Exports", group: "General" },
   { key: "notifications", label: "Notifications", group: "General" },
+  { key: "reports", label: "Reports", group: "Reports" },
   { key: "users", label: "Users", group: "Administration" },
   { key: "roles", label: "Roles", group: "Administration" },
   { key: "productMaster", label: "Product Master", group: "Administration" },
@@ -36,6 +37,17 @@ export function createFullPermissions(): RolePermissions {
   return Object.fromEntries(
     PERMISSION_MODULES.map((m) => [m.key, { view: true, create: true, edit: true, delete: true }]),
   );
+}
+
+/** View, Create & Edit on every "General" module; no access to Administration or Reports. */
+export function generalAccessOnly(): RolePermissions {
+  const permissions = createEmptyPermissions();
+  for (const m of PERMISSION_MODULES) {
+    if (m.group === "General") {
+      permissions[m.key] = { view: true, create: true, edit: true, delete: false };
+    }
+  }
+  return permissions;
 }
 
 export function grantedCount(permissions: RolePermissions): number {

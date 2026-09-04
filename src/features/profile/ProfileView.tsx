@@ -35,7 +35,7 @@ export function ProfileView() {
           <div style={{ ...fontDisplay, color: T.ink, fontSize: 17, fontWeight: 600, marginTop: 14 }}>{CURRENT_USER_NAME}</div>
           <div style={{ ...fontMono, color: T.slateSoft, fontSize: 11, marginTop: 2 }}>admin@transorion.com</div>
           <span className="mt-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold" style={{ ...fontMono, background: T.tealSoft, color: T.teal }}>
-            Administrator
+            Director
           </span>
           <div className="w-full mt-5 pt-5 flex flex-col gap-2.5" style={{ borderTop: `1px solid ${T.hair}` }}>
             <span className="flex items-center gap-2 text-[12px]" style={{ ...fontBody, color: T.slate }}>
@@ -68,7 +68,7 @@ export function ProfileView() {
             <Field label="Email address" value="admin@transorion.com" mono />
             <Field label="Phone number" value="+91 98400 12345" mono />
             {/* <Field label="Department" value="Trade Compliance" /> */}
-            <Field label="Role" value="Administrator" disabled />
+            <Field label="Role" value="Director" disabled />
           </div>
         </div>
       </div>

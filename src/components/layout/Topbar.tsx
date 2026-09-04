@@ -34,7 +34,8 @@ export function Topbar() {
   const isSearchableAdminRoute =
     location.pathname === paths.administration("productMaster") ||
     location.pathname === paths.administration("customerMaster");
-  const hideSearch = (isAdminRoute && !isSearchableAdminRoute) || location.pathname === paths.profile;
+  const hideSearch =
+    (isAdminRoute && !isSearchableAdminRoute) || location.pathname === paths.profile || location.pathname === paths.reports;
 
   useEffect(() => {
     if (!openPanel) return;
@@ -144,7 +145,7 @@ export function Topbar() {
               </div>
               <div className="px-4 py-2.5" style={{ borderBottom: `1px solid ${T.hair}` }}>
                 <span className="px-2.5 py-1 rounded-full text-[10.5px] font-semibold" style={{ ...fontMono, background: T.tealSoft, color: T.teal }}>
-                  Administrator
+                  Director
                 </span>
               </div>
               <button

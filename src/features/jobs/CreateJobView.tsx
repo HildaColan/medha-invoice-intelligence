@@ -2,12 +2,21 @@ import { useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileCheck2, Upload } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
-import { Field, Td, Th } from "@/components/ui";
+import { Field, SelectField, Td, Th } from "@/components/ui";
 import { useToast } from "@/components/ui";
-import { JOBS } from "@/data";
+import { JOBS, MASTER_DATA, OUTPUT_TEMPLATES } from "@/data";
 import { paths } from "@/router/paths";
 
 const STEPS = ["Job Details", "Upload Documents", "Review & Queue"] as const;
+
+const FORWARDER_OPTIONS = MASTER_DATA.forwarders.map((f) => f.name);
+const MODE_OPTIONS = MASTER_DATA.shipmentModes.map((m) => m.name);
+const TYPE_OPTIONS = MASTER_DATA.shipmentTypes.map((t) => t.name);
+const PORT_CODE_OPTIONS = MASTER_DATA.portCodes.map((p) => p.code);
+const LOCATION_OPTIONS = MASTER_DATA.locations.map((l) => l.name);
+const BILLING_CUSTOMER_OPTIONS = MASTER_DATA.billingCustomers.map((c) => c.name);
+const IMPORTER_EXPORTER_OPTIONS = MASTER_DATA.importersExporters.map((e) => e.name);
+const TEMPLATE_OPTIONS = OUTPUT_TEMPLATES.map((t) => t.name);
 
 interface MockFile {
   name: string;
@@ -22,7 +31,7 @@ const MOCK_FILES: MockFile[] = [
 ];
 
 interface JobForm {
-  shipmentNumber: string;
+  hawbHbl: string;
   forwarder: string;
   mode: string;
   type: string;
@@ -31,6 +40,7 @@ interface JobForm {
   billingCustomer: string;
   importer: string;
   exporter: string;
+  template: string;
   invoiceNumber: string;
 }
 
@@ -52,21 +62,19 @@ export function CreateJobView() {
   const [step, setStep] = useState(1);
   const back = () => navigate(paths.jobs);
 
-  const buildInitialForm = (): JobForm =>
-    job
-      ? {
-          shipmentNumber: job.shipment,
-          forwarder: job.forwarder,
-          mode: "Sea",
-          type: "Import",
-          portCode: "INMAA1",
-          location: "Chennai",
-          billingCustomer: "Transorion Logistics Pvt. Ltd.",
-          importer: job.forwarder,
-          exporter: "ABC Technologies Pte Ltd",
-          invoiceNumber: "",
-        }
-      : { shipmentNumber: "", forwarder: "", mode: "", type: "", portCode: "", location: "", billingCustomer: "", importer: "", exporter: "", invoiceNumber: "" };
+  const buildInitialForm = (): JobForm => ({
+    hawbHbl: job?.shipment ?? "",
+    forwarder: (job && FORWARDER_OPTIONS.includes(job.forwarder) ? job.forwarder : FORWARDER_OPTIONS[0]) ?? "",
+    mode: MODE_OPTIONS[0] ?? "",
+    type: TYPE_OPTIONS[0] ?? "",
+    portCode: PORT_CODE_OPTIONS[0] ?? "",
+    location: LOCATION_OPTIONS[0] ?? "",
+    billingCustomer: BILLING_CUSTOMER_OPTIONS[0] ?? "",
+    importer: IMPORTER_EXPORTER_OPTIONS[0] ?? "",
+    exporter: IMPORTER_EXPORTER_OPTIONS[1] ?? IMPORTER_EXPORTER_OPTIONS[0] ?? "",
+    template: TEMPLATE_OPTIONS[0] ?? "",
+    invoiceNumber: "",
+  });
 
   const [form, setForm] = useState<JobForm>(buildInitialForm);
   const setField = (key: keyof JobForm) => (v: string) => setForm((prev) => ({ ...prev, [key]: v }));
@@ -74,11 +82,11 @@ export function CreateJobView() {
   const jobNumber = job ? job.id : "JOB-000133";
   const summaryRows: Array<[string, string]> = [
     ["Job Number", jobNumber],
-    ["Shipment", form.shipmentNumber || "—"],
+    ["HAWB/HBL", form.hawbHbl || "—"],
     ["Forwarder", form.forwarder || "—"],
+    ["Template", form.template || "—"],
     ["Port Code", form.portCode || "—"],
     ["Invoices", job ? `${job.invoices} files` : "3 files"],
-    ["Total size", "1.9 MB"],
   ];
 
   const submit = () => {
@@ -138,15 +146,16 @@ export function CreateJobView() {
 
         {step === 1 && (
           <div className="rounded-2xl p-7 grid grid-cols-2 gap-5" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-            <Field label="SHIPMENT NUMBER" value={form.shipmentNumber} onChange={setField("shipmentNumber")} placeholder="SHP-88270" mono />
-            <Field label="ACTUAL FORWARDER" value={form.forwarder} onChange={setField("forwarder")} placeholder="Select forwarder" />
-            <Field label="SHIPMENT MODE" value={form.mode} onChange={setField("mode")} placeholder="Sea / Air / Road" />
-            <Field label="SHIPMENT TYPE" value={form.type} onChange={setField("type")} placeholder="Import / Export" />
-            <Field label="PORT CODE" value={form.portCode} onChange={setField("portCode")} placeholder="INMAA1" mono />
-            <Field label="LOCATION" value={form.location} onChange={setField("location")} placeholder="Select location" />
-            <Field label="BILLING CUSTOMER" value={form.billingCustomer} onChange={setField("billingCustomer")} placeholder="Select customer" />
-            <Field label="IMPORTER" value={form.importer} onChange={setField("importer")} placeholder="Select importer" />
-            <Field label="EXPORTER" value={form.exporter} onChange={setField("exporter")} placeholder="Select exporter" />
+            <Field label="HAWB/HBL" value={form.hawbHbl} onChange={setField("hawbHbl")} placeholder="HAWB-88270" mono />
+            <SelectField label="ACTUAL FORWARDER" value={form.forwarder} onChange={setField("forwarder")} options={FORWARDER_OPTIONS} />
+            <SelectField label="SHIPMENT MODE" value={form.mode} onChange={setField("mode")} options={MODE_OPTIONS} />
+            <SelectField label="SHIPMENT TYPE" value={form.type} onChange={setField("type")} options={TYPE_OPTIONS} />
+            <SelectField label="PORT CODE" value={form.portCode} onChange={setField("portCode")} options={PORT_CODE_OPTIONS} mono />
+            <SelectField label="LOCATION" value={form.location} onChange={setField("location")} options={LOCATION_OPTIONS} />
+            <SelectField label="BILLING CUSTOMER" value={form.billingCustomer} onChange={setField("billingCustomer")} options={BILLING_CUSTOMER_OPTIONS} />
+            <SelectField label="IMPORTER" value={form.importer} onChange={setField("importer")} options={IMPORTER_EXPORTER_OPTIONS} />
+            <SelectField label="EXPORTER" value={form.exporter} onChange={setField("exporter")} options={IMPORTER_EXPORTER_OPTIONS} />
+            <SelectField label="TEMPLATE" value={form.template} onChange={setField("template")} options={TEMPLATE_OPTIONS} />
             <Field label="INVOICE NUMBER (if known)" value={form.invoiceNumber} onChange={setField("invoiceNumber")} placeholder="Optional" mono />
           </div>
         )}

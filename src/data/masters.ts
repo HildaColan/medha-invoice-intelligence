@@ -10,6 +10,13 @@ export interface MasterCategory {
 
 export const MASTER_CATEGORIES: MasterCategory[] = [
   {
+    key: "forwarders",
+    label: "Forwarders",
+    description: "Freight forwarders who move shipments on behalf of customers.",
+    codeLabel: "Code",
+    nameLabel: "Forwarder",
+  },
+  {
     key: "shipmentModes",
     label: "Shipment Modes",
     description: "Modes of transport used for shipments — sea, air, road, or rail.",
@@ -54,6 +61,13 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
 ];
 
 export const MASTER_DATA: Record<MasterCategoryKey, MasterEntry[]> = {
+  forwarders: [
+    { id: "fwd-orient-star", code: "FWD-1001", name: "Orient Star Freight", status: "Active" },
+    { id: "fwd-meridian", code: "FWD-1002", name: "Meridian Cargo", status: "Active" },
+    { id: "fwd-blue-harbor", code: "FWD-1003", name: "Blue Harbor Logistics", status: "Active" },
+    { id: "fwd-transpacific", code: "FWD-1004", name: "TransPacific Line", status: "Active" },
+    { id: "fwd-cargo-alliance", code: "FWD-1005", name: "Cargo Alliance Group", status: "Inactive" },
+  ],
   shipmentModes: [
     { id: "sm-sea", code: "SEA", name: "Sea Freight", status: "Active" },
     { id: "sm-air", code: "AIR", name: "Air Freight", status: "Active" },
