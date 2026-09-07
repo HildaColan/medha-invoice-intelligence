@@ -5,6 +5,7 @@ import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths } from "@/router/paths";
 import { login } from "./authStore";
 import transorionLogo from "@/assets/transorion-logo.png";
+import medhaLogo from "@/assets/image (12).png";
 import { useAuditLog } from "@/features/administration/auditLog";
 
 export function LoginView() {
@@ -33,16 +34,8 @@ export function LoginView() {
         className="hidden lg:flex w-[440px] shrink-0 flex-col justify-between p-12"
         style={{ background: T.brassDeep }}
       >
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#fff" }}>
-            <span style={{ ...fontDisplay, color: T.brassDeep, fontWeight: 700, fontSize: 17 }}>M</span>
-          </div>
-          <div>
-            <div style={{ ...fontDisplay, color: "#fff", fontWeight: 600, fontSize: 18, letterSpacing: 0.3 }}>MEDHA</div>
-            <div style={{ ...fontMono, color: "rgba(255,255,255,0.75)", fontSize: 9.5, letterSpacing: "0.14em" }}>
-              INVOICE INTELLIGENCE
-            </div>
-          </div>
+        <div className="px-3 py-2  inline-flex w-fit" style={{ background: "#fff" }}>
+          <img src={medhaLogo} alt="MEDHA — Invoice Extraction AI" className="h-16 w-auto" />
         </div>
 
         <div>
