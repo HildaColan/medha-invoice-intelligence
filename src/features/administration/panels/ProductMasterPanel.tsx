@@ -5,6 +5,7 @@ import { Field, Modal, SelectField, StatCard, Td, Th } from "@/components/ui";
 import { CUSTOMERS, PRODUCTS } from "@/data";
 import type { Product, ProductStatus } from "@/types";
 import { parseProductsFromExcel, type ParsedProductRow } from "./parseProductsFromExcel";
+import { useAuditLog } from "../auditLog";
 
 const STATUS_OPTIONS: readonly ProductStatus[] = ["Active", "Unmatched"];
 const CUSTOMER_NAMES = CUSTOMERS.map((c) => c.name);
@@ -12,6 +13,7 @@ const CUSTOMER_NAMES = CUSTOMERS.map((c) => c.name);
 const EMPTY_PRODUCT: Product = { part: "", model: "", desc: "", hsn: "", duty: "", status: "Active", customer: CUSTOMER_NAMES[0] ?? "" };
 
 export function ProductMasterPanel() {
+  const { logActivity } = useAuditLog();
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<string | null>(null);
@@ -77,8 +79,16 @@ export function ProductMasterPanel() {
         setError("Part No. and Description are required.");
         return;
       }
+      const previous = products.find((p) => p.part === editingPart);
       setProducts((prev) => prev.map((p) => (p.part === editingPart ? form : p)));
       setModalOpen(false);
+      logActivity({
+        action: "Edit",
+        module: "Product Master",
+        ref: form.part,
+        previousValue: previous ? `${previous.status} / ${previous.duty}` : undefined,
+        updatedValue: `${form.status} / ${form.duty}`,
+      });
       return;
     }
 
@@ -104,6 +114,12 @@ export function ProductMasterPanel() {
     }
     setProducts((prev) => [...newProducts, ...prev]);
     setModalOpen(false);
+    logActivity({
+      action: "Upload",
+      module: "Product Master",
+      ref: importFileName ?? "Bulk import",
+      updatedValue: `${newProducts.length} records`,
+    });
   };
 
   const matched = products.filter((p) => p.status === "Active").length;

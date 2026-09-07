@@ -6,6 +6,7 @@ import { Field, SelectField, Td, Th } from "@/components/ui";
 import { useToast } from "@/components/ui";
 import { JOBS, MASTER_DATA, OUTPUT_TEMPLATES } from "@/data";
 import { paths } from "@/router/paths";
+import { useAuditLog } from "@/features/administration/auditLog";
 
 const STEPS = ["Job Details", "Upload Documents", "Review & Queue"] as const;
 
@@ -59,6 +60,7 @@ export function CreateJobView() {
 
   const navigate = useNavigate();
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const [step, setStep] = useState(1);
   const back = () => navigate(paths.jobs);
 
@@ -91,6 +93,7 @@ export function CreateJobView() {
 
   const submit = () => {
     notify(isEdit ? `${jobNumber} updated.` : `${jobNumber} created and sent to queue.`);
+    logActivity({ action: isEdit ? "Update" : "Create", module: "Jobs", ref: jobNumber });
     back();
   };
 

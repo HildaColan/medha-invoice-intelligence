@@ -142,6 +142,17 @@ export interface AuditEntry {
   time: string;
 }
 
+/** Input to useAuditLog().logActivity — id/time are auto-filled, user/result default. */
+export interface AuditLogInput {
+  user?: string;
+  action: string;
+  module: string;
+  ref?: string;
+  previousValue?: string;
+  updatedValue?: string;
+  result?: AuditResult;
+}
+
 export type InvoiceNumberStatus = "New" | "Duplicate";
 
 export interface JobInvoiceNumber {
@@ -201,6 +212,8 @@ export interface UserActivityReportRow {
   role: string;
   jobNumber: string;
   date: string;
+  /** ISO YYYY-MM-DD form of `date`, for reliable range/bucket comparisons */
+  dateIso: string;
   startTime: string;
   completionTime: string;
   turnaround: string;
@@ -212,6 +225,8 @@ export interface UserActivityReportRow {
 
 export interface DailyJobStat {
   day: string;
+  /** ISO YYYY-MM-DD form of `day`, for reliable range/bucket comparisons */
+  date: string;
   completed: number;
   pending: number;
 }
@@ -222,5 +237,44 @@ export interface DownloadableDataset {
   description: string;
   /** Records available to export in this preview; undefined means not yet populated */
   recordCount?: number;
+}
+
+/** Row of the Date & Time tab's per-user detailed table (Part 4). */
+export interface PeriodUserSummary {
+  user: string;
+  jobsCompleted: number;
+  jobsPending: number;
+  reworkCount: number;
+  avgTurnaround: string;
+}
+
+/**
+ * Row for the "no real files yet" manifest exports (Original/Corrected Documents,
+ * Supporting Attachments, Other Records — Part 5). `source` marks the row as
+ * fabricated demo data so the marker travels inside the downloaded file itself.
+ * TODO(BE): replace with actual file download endpoint.
+ */
+export interface DocumentManifestRow {
+  fileName: string;
+  job: string;
+  type: string;
+  size: string;
+  kind: string;
+  date: string;
+  source: string;
+}
+
+/** Flattened Job + LineItem row for the "Transaction Details" dataset export (Part 5). */
+export interface TransactionDetailRow {
+  jobNumber: string;
+  shipment: string;
+  line: number;
+  desc: string;
+  part: string;
+  hsn: string;
+  qty: number;
+  unit: string;
+  value: string;
+  status: LineItemStatus;
 }
 

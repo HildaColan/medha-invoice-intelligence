@@ -4,6 +4,7 @@ import { T, fontBody } from "@/theme/tokens";
 import { Field, Modal, SelectField, Td, Th, Toggle } from "@/components/ui";
 import { VALIDATION_RULES, VALIDATION_RULE_TYPES } from "@/data";
 import type { ValidationRule, ValidationRuleType } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const EMPTY_RULE: ValidationRule = { id: "", field: "", ruleType: VALIDATION_RULE_TYPES[0], condition: "", enabled: true };
 
@@ -12,6 +13,7 @@ function slugify(value: string): string {
 }
 
 export function ValidationRulesPanel() {
+  const { logActivity } = useAuditLog();
   const [rules, setRules] = useState<ValidationRule[]>(VALIDATION_RULES);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,6 +41,7 @@ export function ValidationRulesPanel() {
       setError("Field and Condition are required.");
       return;
     }
+    const previous = editingId ? rules.find((r) => r.id === editingId) : null;
     setRules((prev) => {
       if (editingId) {
         return prev.map((r) => (r.id === editingId ? form : r));
@@ -51,15 +54,30 @@ export function ValidationRulesPanel() {
       return [{ ...form, id }, ...prev];
     });
     setModalOpen(false);
+    logActivity({
+      action: editingId ? "Edit" : "Create",
+      module: "Validation Rules",
+      ref: form.field,
+      previousValue: previous?.condition,
+      updatedValue: form.condition,
+    });
   };
 
   const remove = (rule: ValidationRule) => {
     if (window.confirm(`Remove the validation rule for "${rule.field}"?`)) {
       setRules((prev) => prev.filter((r) => r.id !== rule.id));
+      logActivity({ action: "Delete", module: "Validation Rules", ref: rule.field });
     }
   };
 
   const toggleEnabled = (rule: ValidationRule) => {
+    logActivity({
+      action: "Update",
+      module: "Validation Rules",
+      ref: rule.field,
+      previousValue: rule.enabled ? "Enabled" : "Disabled",
+      updatedValue: rule.enabled ? "Disabled" : "Enabled",
+    });
     setRules((prev) => prev.map((r) => (r.id === rule.id ? { ...r, enabled: !r.enabled } : r)));
   };
 

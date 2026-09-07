@@ -4,6 +4,7 @@ import { T, fontMono } from "@/theme/tokens";
 import { Field, Modal, SelectField, Td, Th, useToast } from "@/components/ui";
 import { ROLES, USERS } from "@/data";
 import type { AppUser, UserStatus } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const EMPTY_USER: AppUser = { name: "", email: "", role: "HOD", status: "Active" };
 const STATUS_OPTIONS: readonly UserStatus[] = ["Active", "Deactivated"];
@@ -11,6 +12,7 @@ const CURRENT_USER_EMAIL = "priya.r@transorion.com";
 
 export function UsersPanel() {
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const [users, setUsers] = useState<AppUser[]>(USERS);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
@@ -44,9 +46,17 @@ export function UsersPanel() {
       setError("A user with this email already exists.");
       return;
     }
+    const previous = editingEmail ? users.find((u) => u.email === editingEmail) : undefined;
     setUsers((prev) => (editingEmail ? prev.map((u) => (u.email === editingEmail ? form : u)) : [form, ...prev]));
     setModalOpen(false);
     notify(editingEmail ? `${form.name}'s access updated.` : `${form.name} added as ${form.role}.`);
+    logActivity({
+      action: editingEmail ? "Edit" : "Create",
+      module: "Users",
+      ref: form.email,
+      previousValue: previous ? `${previous.role} / ${previous.status}` : undefined,
+      updatedValue: `${form.role} / ${form.status}`,
+    });
   };
 
   const remove = (u: AppUser) => {
@@ -57,6 +67,7 @@ export function UsersPanel() {
     if (window.confirm(`Remove ${u.name}? They will lose access to MEDHA.`)) {
       setUsers((prev) => prev.filter((row) => row.email !== u.email));
       notify(`${u.name} removed.`);
+      logActivity({ action: "Delete", module: "Users", ref: u.email, previousValue: `${u.role} / ${u.status}` });
     }
   };
 

@@ -4,6 +4,7 @@ import { T, fontBody, fontDisplay } from "@/theme/tokens";
 import { Field, Modal, SelectField, Td, Th } from "@/components/ui";
 import { MASTER_CATEGORIES, MASTER_DATA } from "@/data";
 import type { MasterCategoryKey, MasterEntry, MasterEntryStatus } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const STATUS_OPTIONS: readonly MasterEntryStatus[] = ["Active", "Inactive"];
 
@@ -14,6 +15,7 @@ function slugify(value: string): string {
 }
 
 export function MastersPanel() {
+  const { logActivity } = useAuditLog();
   const [activeKey, setActiveKey] = useState<MasterCategoryKey>(MASTER_CATEGORIES[0].key);
   const [data, setData] = useState<Record<MasterCategoryKey, MasterEntry[]>>(MASTER_DATA);
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,6 +52,7 @@ export function MastersPanel() {
       setError(`${category.codeLabel} and ${category.nameLabel} are required.`);
       return;
     }
+    const previous = editingId ? entries.find((e) => e.id === editingId) : null;
     setData((prev) => {
       const list = prev[activeKey];
       if (editingId) {
@@ -63,11 +66,19 @@ export function MastersPanel() {
       return { ...prev, [activeKey]: [{ ...form, id }, ...list] };
     });
     setModalOpen(false);
+    logActivity({
+      action: editingId ? "Edit" : "Create",
+      module: `Masters — ${category.label}`,
+      ref: form.name,
+      previousValue: previous?.status,
+      updatedValue: form.status,
+    });
   };
 
   const remove = (entry: MasterEntry) => {
     if (window.confirm(`Remove "${entry.name}"?`)) {
       setData((prev) => ({ ...prev, [activeKey]: prev[activeKey].filter((e) => e.id !== entry.id) }));
+      logActivity({ action: "Delete", module: `Masters — ${category.label}`, ref: entry.name });
     }
   };
 

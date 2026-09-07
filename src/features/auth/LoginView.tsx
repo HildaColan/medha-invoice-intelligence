@@ -4,9 +4,12 @@ import { Lock, Mail } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths } from "@/router/paths";
 import { login } from "./authStore";
+import transorionLogo from "@/assets/transorion-logo.png";
+import { useAuditLog } from "@/features/administration/auditLog";
 
 export function LoginView() {
   const navigate = useNavigate();
+  const { logActivity } = useAuditLog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,10 +18,12 @@ export function LoginView() {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setError("Enter both email and password to continue.");
+      logActivity({ action: "Login", module: "Auth", ref: email || "(empty)", result: "Failed" });
       return;
     }
     setError("");
     login();
+    logActivity({ action: "Login", module: "Auth", ref: email });
     navigate(paths.dashboard, { replace: true });
   };
 
@@ -54,8 +59,15 @@ export function LoginView() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8">
-        <form onSubmit={handleSubmit} className="w-full max-w-[380px]">
+      <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden">
+        <img
+          src={transorionLogo}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-[100%] max-w-[1500px]"
+          style={{ opacity: 0.05 }}
+        />
+        <form onSubmit={handleSubmit} className="relative z-10 w-full max-w-[380px]">
           <div className="mb-8">
             <div style={{ ...fontDisplay, color: T.ink, fontWeight: 600, fontSize: 24 }}>Sign in</div>
             <div style={{ ...fontBody, color: T.slateSoft, fontSize: 13, marginTop: 4 }}>

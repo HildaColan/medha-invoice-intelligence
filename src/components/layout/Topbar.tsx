@@ -9,6 +9,7 @@ import { paths } from "@/router/paths";
 import { getPageTitle } from "@/router/titles";
 import { logout } from "@/features/auth/authStore";
 import { ChangePasswordModal } from "@/features/auth/ChangePasswordModal";
+import { useAuditLog } from "@/features/administration/auditLog";
 
 type PanelKey = "notif" | "profile" | null;
 
@@ -23,6 +24,7 @@ export function Topbar() {
   const [pwModalOpen, setPwModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logActivity } = useAuditLog();
   const title = getPageTitle(location.pathname);
 
   const notifRef = useRef<HTMLDivElement>(null);
@@ -163,7 +165,7 @@ export function Topbar() {
                 <span style={{ ...fontBody, color: T.slate, fontSize: 12.5, fontWeight: 500 }}>Change Password</span>
               </button>
               <button
-                onClick={() => { setOpenPanel(null); logout(); navigate(paths.login, { replace: true }); }}
+                onClick={() => { setOpenPanel(null); logActivity({ action: "Logout", module: "Auth" }); logout(); navigate(paths.login, { replace: true }); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-[#F5EDE4]"
                 style={{ borderTop: `1px solid ${T.hair}` }}
               >
