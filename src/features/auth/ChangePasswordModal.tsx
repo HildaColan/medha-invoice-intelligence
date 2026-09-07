@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { T, fontBody, fontMono } from "@/theme/tokens";
 import { Modal, useToast } from "@/components/ui";
+import { useAuditLog } from "@/features/administration/auditLog";
 
 export interface ChangePasswordModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ const EMPTY_FORM = { current: "", next: "", confirm: "" };
 
 export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps) {
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,18 +25,22 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
   const save = () => {
     if (!form.current || !form.next || !form.confirm) {
       setError("All fields are required.");
+      logActivity({ action: "Update", module: "Auth", ref: "Own account", result: "Failed" });
       return;
     }
     if (form.next.length < 8) {
       setError("New password must be at least 8 characters.");
+      logActivity({ action: "Update", module: "Auth", ref: "Own account", result: "Failed" });
       return;
     }
     if (form.next !== form.confirm) {
       setError("New password and confirmation don't match.");
+      logActivity({ action: "Update", module: "Auth", ref: "Own account", result: "Failed" });
       return;
     }
     close();
     notify("Password updated.");
+    logActivity({ action: "Update", module: "Auth", ref: "Own account" });
   };
 
   return (

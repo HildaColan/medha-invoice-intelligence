@@ -4,9 +4,11 @@ import { T, fontBody, fontMono } from "@/theme/tokens";
 import { SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
 import { EXPORTS } from "@/data";
 import type { ExportRecord } from "@/types";
+import { useAuditLog } from "@/features/administration/auditLog";
 
 export function ExportsView() {
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const [exportsList, setExportsList] = useState<ExportRecord[]>(EXPORTS);
 
   const [fromDate, setFromDate] = useState("");
@@ -18,6 +20,7 @@ export function ExportsView() {
   const download = (file: ExportRecord) => {
     setExportsList((prev) => prev.map((e) => (e.file === file.file ? { ...e, status: "Downloaded" } : e)));
     notify(`${file.status === "Downloaded" ? "Re-downloading" : "Downloading"} ${file.file}…`);
+    logActivity({ action: "Download", module: "Exports", ref: file.file, previousValue: file.status, updatedValue: "Downloaded" });
   };
 
   const applyPeriodFilter = () => {

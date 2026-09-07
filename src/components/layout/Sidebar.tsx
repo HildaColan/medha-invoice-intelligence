@@ -10,6 +10,7 @@ import {
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths, ADMIN_VIEWS } from "@/router/paths";
 import { logout } from "@/features/auth/authStore";
+import { useAuditLog } from "@/features/administration/auditLog";
 import type { AdminViewKey } from "@/types";
 
 interface NavItem {
@@ -55,6 +56,7 @@ export function Sidebar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logActivity } = useAuditLog();
 
   const isAdminRoute = location.pathname.startsWith("/administration");
 
@@ -146,7 +148,7 @@ export function Sidebar() {
           </div>
         </button>
         <button
-          onClick={() => { logout(); navigate(paths.login, { replace: true }); }}
+          onClick={() => { logActivity({ action: "Logout", module: "Auth" }); logout(); navigate(paths.login, { replace: true }); }}
           title="Log out"
           className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
           style={{ background: "rgba(255,255,255,0.16)" }}

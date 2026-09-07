@@ -4,6 +4,7 @@ import { T, fontBody } from "@/theme/tokens";
 import { Field, Modal, SelectField, StatCard, Td, Th } from "@/components/ui";
 import { CUSTOMERS } from "@/data";
 import type { Customer, CustomerStatus } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const STATUS_OPTIONS: readonly CustomerStatus[] = ["Active", "Inactive"];
 
@@ -14,6 +15,7 @@ function slugify(name: string): string {
 }
 
 export function CustomerMasterPanel() {
+  const { logActivity } = useAuditLog();
   const [customers, setCustomers] = useState<Customer[]>(CUSTOMERS);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function CustomerMasterPanel() {
       setError("Customer name and code are required.");
       return;
     }
+    const previous = editingId ? customers.find((c) => c.id === editingId) : null;
     setCustomers((prev) => {
       if (editingId) {
         return prev.map((c) => (c.id === editingId ? form : c));
@@ -53,11 +56,19 @@ export function CustomerMasterPanel() {
       return [{ ...form, id }, ...prev];
     });
     setModalOpen(false);
+    logActivity({
+      action: editingId ? "Edit" : "Create",
+      module: "Customer Master",
+      ref: form.name,
+      previousValue: previous?.status,
+      updatedValue: form.status,
+    });
   };
 
   const remove = (c: Customer) => {
     if (window.confirm(`Remove "${c.name}"? Products linked to this customer will keep their existing tag.`)) {
       setCustomers((prev) => prev.filter((customer) => customer.id !== c.id));
+      logActivity({ action: "Delete", module: "Customer Master", ref: c.name });
     }
   };
 

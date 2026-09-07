@@ -5,6 +5,7 @@ import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { PipelineStrip, Stamp, Td, Th, useToast } from "@/components/ui";
 import { JOBS, JOB_INVOICES, LINE_ITEMS } from "@/data";
 import { paths } from "@/router/paths";
+import { diffFields, useAuditLog } from "@/features/administration/auditLog";
 
 interface SummaryField {
   label: string;
@@ -25,10 +26,12 @@ export function JobDetailView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const job = JOBS.find((j) => j.id === id);
 
   const [editMode, setEditMode] = useState(false);
   const [summary, setSummary] = useState<SummaryField[]>(INITIAL_SUMMARY);
+  const [editSnapshot, setEditSnapshot] = useState<SummaryField[] | null>(null);
 
   // Unknown job id — fall back to the jobs list rather than rendering a blank page.
   if (!job) return <Navigate to={paths.jobs} replace />;
@@ -40,12 +43,31 @@ export function JobDetailView() {
   };
 
   const toggleEdit = () => {
-    if (editMode) notify("Field changes saved.");
+    if (editMode) {
+      notify("Field changes saved.");
+      if (editSnapshot) {
+        const previousMap: Record<string, string> = {};
+        editSnapshot.forEach((f) => {
+          previousMap[f.label] = f.val;
+        });
+        const updatedMap: Record<string, string> = {};
+        summary.forEach((f) => {
+          updatedMap[f.label] = f.val;
+        });
+        diffFields(previousMap, updatedMap).forEach(({ field, from, to }) => {
+          logActivity({ action: "Update", module: "Job Review", ref: job.id, previousValue: `${field}: ${from}`, updatedValue: to });
+        });
+      }
+      setEditSnapshot(null);
+    } else {
+      setEditSnapshot(summary);
+    }
     setEditMode(!editMode);
   };
 
   const consolidate = () => {
     notify(`CSV generated for ${job.id} — check the Exports section.`);
+    logActivity({ action: "Download", module: "Exports", ref: job.id });
     navigate(paths.exports);
   };
 

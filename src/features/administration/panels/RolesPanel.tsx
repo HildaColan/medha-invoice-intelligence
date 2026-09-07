@@ -12,6 +12,7 @@ import {
   grantedCount,
 } from "@/data";
 import type { PermissionAction, Role, RolePermissions } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const EMPTY_ROLE: Role = { id: "", name: "", description: "", permissions: createEmptyPermissions() };
 
@@ -29,6 +30,7 @@ function slugify(name: string): string {
 }
 
 export function RolesPanel() {
+  const { logActivity } = useAuditLog();
   const [roles, setRoles] = useState<Role[]>(ROLES);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export function RolesPanel() {
       setError("Role name and description are required.");
       return;
     }
+    const previous = editingId ? roles.find((r) => r.id === editingId) : null;
     setRoles((prev) => {
       if (editingId) {
         return prev.map((r) => (r.id === editingId ? form : r));
@@ -104,11 +107,19 @@ export function RolesPanel() {
       return [...prev, { ...form, id }];
     });
     setModalOpen(false);
+    logActivity({
+      action: editingId ? "Edit" : "Create",
+      module: "Roles",
+      ref: form.name,
+      previousValue: previous?.description,
+      updatedValue: form.description,
+    });
   };
 
   const remove = (r: Role) => {
     if (window.confirm(`Remove the "${r.name}" role? Users assigned to it will need to be reassigned.`)) {
       setRoles((prev) => prev.filter((role) => role.id !== r.id));
+      logActivity({ action: "Delete", module: "Roles", ref: r.name });
     }
   };
 

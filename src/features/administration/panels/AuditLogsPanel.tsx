@@ -1,15 +1,19 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
 import { T, fontBody, fontMono } from "@/theme/tokens";
-import { SelectField, Td, Th } from "@/components/ui";
-import { AUDIT } from "@/data";
+import { Field, SelectField, Td, Th } from "@/components/ui";
+import { useAuditLog } from "../auditLog";
 
 const ALL = "All";
 
 export function AuditLogsPanel() {
-  const userOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.user)))], []);
-  const moduleOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.module)))], []);
-  const actionOptions = useMemo(() => [ALL, ...Array.from(new Set(AUDIT.map((a) => a.action)))], []);
+  const { entries } = useAuditLog();
+
+  // Depend on `entries` (not a frozen []) so these option lists pick up new
+  // users/modules/actions as logActivity(...) appends live entries.
+  const userOptions = useMemo(() => [ALL, ...Array.from(new Set(entries.map((a) => a.user)))], [entries]);
+  const moduleOptions = useMemo(() => [ALL, ...Array.from(new Set(entries.map((a) => a.module)))], [entries]);
+  const actionOptions = useMemo(() => [ALL, ...Array.from(new Set(entries.map((a) => a.action)))], [entries]);
   const resultOptions = [ALL, "Success", "Failed"] as const;
 
   const [user, setUser] = useState(ALL);
@@ -18,12 +22,14 @@ export function AuditLogsPanel() {
   const [result, setResult] = useState<string>(ALL);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [refQuery, setRefQuery] = useState("");
 
-  const filtered = AUDIT.filter((a) => {
+  const filtered = entries.filter((a) => {
     if (user !== ALL && a.user !== user) return false;
     if (module !== ALL && a.module !== module) return false;
     if (action !== ALL && a.action !== action) return false;
     if (result !== ALL && a.result !== result) return false;
+    if (refQuery && !a.ref.toLowerCase().includes(refQuery.toLowerCase())) return false;
     const entryDate = new Date(a.time.replace(",", ""));
     if (fromDate && entryDate < new Date(fromDate)) return false;
     if (toDate && entryDate > new Date(`${toDate}T23:59:59`)) return false;
@@ -37,6 +43,7 @@ export function AuditLogsPanel() {
     setResult(ALL);
     setFromDate("");
     setToDate("");
+    setRefQuery("");
   };
 
   return (
@@ -50,11 +57,12 @@ export function AuditLogsPanel() {
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 mb-5 grid grid-cols-6 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+      <div className="rounded-2xl p-4 mb-5 grid grid-cols-4 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
         <SelectField label="User" value={user} onChange={setUser} options={userOptions} />
         <SelectField label="Module" value={module} onChange={setModule} options={moduleOptions} />
         <SelectField label="Activity Type" value={action} onChange={setAction} options={actionOptions} />
         <SelectField label="Status" value={result} onChange={setResult} options={resultOptions} />
+
         <div>
           <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>From</label>
           <input
@@ -65,25 +73,24 @@ export function AuditLogsPanel() {
             style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
           />
         </div>
-        <div className="flex items-end gap-2">
-          <div className="flex-1">
-            <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-              style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            />
-          </div>
-          <button
-            onClick={clearFilters}
-            className="px-3.5 py-2.5 rounded-lg text-[12.5px] font-semibold shrink-0"
+        <div>
+          <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To</label>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
             style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-          >
-            Clear
-          </button>
+          />
         </div>
+        <Field label="Job / Reference" placeholder="e.g. JOB-000124" value={refQuery} onChange={setRefQuery} />
+        <button
+          onClick={clearFilters}
+          className="px-3.5 py-2.5 rounded-lg text-[12.5px] font-semibold h-[38px]"
+          style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+        >
+          Clear
+        </button>
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>

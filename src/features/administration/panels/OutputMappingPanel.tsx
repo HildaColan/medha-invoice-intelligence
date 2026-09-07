@@ -4,6 +4,7 @@ import { T, fontBody, fontMono } from "@/theme/tokens";
 import { Field, Modal, Td, Th } from "@/components/ui";
 import { OUTPUT_TEMPLATES } from "@/data";
 import type { OutputFieldMapping, OutputTemplate } from "@/types";
+import { useAuditLog } from "../auditLog";
 
 const CURRENT_USER = "Priya Raghavan";
 
@@ -18,6 +19,7 @@ function todayLabel(): string {
 const EMPTY_FIELD_FORM = { internalField: "", outputField: "" };
 
 export function OutputMappingPanel() {
+  const { logActivity } = useAuditLog();
   const [templates, setTemplates] = useState<OutputTemplate[]>(OUTPUT_TEMPLATES);
 
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
@@ -53,6 +55,7 @@ export function OutputMappingPanel() {
       setTemplateError("Template name is required.");
       return;
     }
+    const previousTemplate = editingTemplateId ? templates.find((t) => t.id === editingTemplateId) : null;
     setTemplates((prev) => {
       if (editingTemplateId) {
         return prev.map((t) => (t.id === editingTemplateId ? { ...t, name: templateName } : t));
@@ -72,11 +75,19 @@ export function OutputMappingPanel() {
       return [newTemplate, ...prev];
     });
     setTemplateModalOpen(false);
+    logActivity({
+      action: editingTemplateId ? "Edit" : "Create",
+      module: "Output Mapping",
+      ref: templateName,
+      previousValue: editingTemplateId ? previousTemplate?.name : undefined,
+      updatedValue: templateName,
+    });
   };
 
   const removeTemplate = (t: OutputTemplate) => {
     if (window.confirm(`Remove the "${t.name}" template and all its field mappings?`)) {
       setTemplates((prev) => prev.filter((x) => x.id !== t.id));
+      logActivity({ action: "Delete", module: "Output Mapping", ref: t.name });
     }
   };
 
@@ -106,6 +117,8 @@ export function OutputMappingPanel() {
       setFieldError("Both internal field and output field are required.");
       return;
     }
+    const templateName = activeTemplate?.name ?? "";
+    const previousField = editingFieldId ? activeTemplate?.fields.find((f) => f.id === editingFieldId) : null;
     setTemplates((prev) =>
       prev.map((t) => {
         if (t.id !== fieldsTemplateId) return t;
@@ -121,13 +134,27 @@ export function OutputMappingPanel() {
       }),
     );
     resetFieldForm();
+    logActivity({
+      action: editingFieldId ? "Edit" : "Create",
+      module: "Output Mapping",
+      ref: `${templateName} — ${fieldForm.internalField}`,
+      previousValue: previousField?.outputField,
+      updatedValue: fieldForm.outputField,
+    });
   };
 
   const removeField = (f: OutputFieldMapping) => {
+    const templateName = activeTemplate?.name ?? "";
     setTemplates((prev) =>
       prev.map((t) => (t.id === fieldsTemplateId ? { ...t, fields: t.fields.filter((x) => x.id !== f.id) } : t)),
     );
     if (editingFieldId === f.id) resetFieldForm();
+    logActivity({
+      action: "Delete",
+      module: "Output Mapping",
+      ref: `${templateName} — ${f.internalField}`,
+      previousValue: f.outputField,
+    });
   };
 
   return (
