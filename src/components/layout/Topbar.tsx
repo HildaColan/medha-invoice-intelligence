@@ -37,7 +37,7 @@ export function Topbar() {
     location.pathname === paths.administration("productMaster") ||
     location.pathname === paths.administration("customerMaster");
   const hideSearch =
-    (isAdminRoute && !isSearchableAdminRoute) || location.pathname === paths.profile || location.pathname === paths.reports;
+    (isAdminRoute && !isSearchableAdminRoute) || location.pathname === paths.profile;
 
   useEffect(() => {
     if (!openPanel) return;

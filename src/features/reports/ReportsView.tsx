@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertTriangle, CalendarClock, CheckCircle2, Database, Download, FileSpreadsheet, FileText, RefreshCcw } from "lucide-react";
-import { T, fontBody, fontDisplay, fontMono, tooltipItemStyle, tooltipLabelStyle, tooltipStyle } from "@/theme/tokens";
-import { ChartCard, Field, SectionHeading, SelectField, StatCard, Td, Th, useToast } from "@/components/ui";
+import { AlertTriangle, CheckCircle2, Database, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
+import { DateRangePicker, Field, SectionHeading, SelectField, StatCard, Td, Th, useToast } from "@/components/ui";
 import { useAuditLog } from "@/features/administration/auditLog";
 import {
   CUSTOMERS,
@@ -55,37 +54,6 @@ function formatMinutes(totalMinutes: number): string {
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
-function isoWeekBucketLabel(dateIso: string): string {
-  const d = new Date(`${dateIso}T00:00:00`);
-  const diffToMonday = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - diffToMonday);
-  return `Wk ${String(d.getDate()).padStart(2, "0")} ${MONTH_NAMES[d.getMonth()]}`;
-}
-
-function monthBucketLabel(dateIso: string): string {
-  const d = new Date(`${dateIso}T00:00:00`);
-  return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function aggregateByBucket(
-  rows: { date: string; completed: number; pending: number }[],
-  labelFn: (dateIso: string) => string
-): { label: string; completed: number; pending: number }[] {
-  const buckets = new Map<string, { completed: number; pending: number }>();
-  const order: string[] = [];
-  for (const r of rows) {
-    const label = labelFn(r.date);
-    if (!buckets.has(label)) {
-      buckets.set(label, { completed: 0, pending: 0 });
-      order.push(label);
-    }
-    const bucket = buckets.get(label)!;
-    bucket.completed += r.completed;
-    bucket.pending += r.pending;
-  }
-  return order.map((label) => ({ label, ...buckets.get(label)! }));
-}
-
 function buildPeriodUserSummaries(rows: UserActivityReportRow[]): PeriodUserSummary[] {
   const groups = new Map<string, { jobsCompleted: number; jobsPending: number; reworkCount: number; minutes: number[] }>();
   for (const r of rows) {
@@ -123,46 +91,63 @@ export function ReportsView() {
   const [role, setRole] = useState(ALL);
   const [status, setStatus] = useState<string>(ALL);
   const [activityType, setActivityType] = useState(ALL);
-  const [specificDate, setSpecificDate] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [startTimeFrom, setStartTimeFrom] = useState("");
-  const [startTimeTo, setStartTimeTo] = useState("");
+  const [draftDateFrom, setDraftDateFrom] = useState("");
+  const [draftDateTo, setDraftDateTo] = useState("");
+
+  const [appliedUser, setAppliedUser] = useState(ALL);
+  const [appliedRole, setAppliedRole] = useState(ALL);
+  const [appliedStatus, setAppliedStatus] = useState<string>(ALL);
+  const [appliedActivityType, setAppliedActivityType] = useState(ALL);
+  const [appliedDateFrom, setAppliedDateFrom] = useState("");
+  const [appliedDateTo, setAppliedDateTo] = useState("");
+
+  const hasActivityFilters =
+    user !== ALL || role !== ALL || status !== ALL || activityType !== ALL || !!draftDateFrom || !!draftDateTo ||
+    appliedUser !== ALL || appliedRole !== ALL || appliedStatus !== ALL || appliedActivityType !== ALL ||
+    !!appliedDateFrom || !!appliedDateTo;
+
+  const applyActivityFilters = () => {
+    setAppliedUser(user);
+    setAppliedRole(role);
+    setAppliedStatus(status);
+    setAppliedActivityType(activityType);
+    setAppliedDateFrom(draftDateFrom);
+    setAppliedDateTo(draftDateTo);
+  };
+
+  const clearActivityFilters = () => {
+    setUser(ALL);
+    setRole(ALL);
+    setStatus(ALL);
+    setActivityType(ALL);
+    setDraftDateFrom("");
+    setDraftDateTo("");
+    setAppliedUser(ALL);
+    setAppliedRole(ALL);
+    setAppliedStatus(ALL);
+    setAppliedActivityType(ALL);
+    setAppliedDateFrom("");
+    setAppliedDateTo("");
+  };
 
   const filteredActivity = USER_ACTIVITY_REPORT.filter((r) => {
-    if (user !== ALL && r.user !== user) return false;
-    if (role !== ALL && r.role !== role) return false;
-    if (status !== ALL && r.status !== status) return false;
-    if (activityType !== ALL && r.lastActivity !== activityType) return false;
-    if (specificDate) {
-      if (r.dateIso !== specificDate) return false;
-    } else {
-      if (fromDate && r.dateIso < fromDate) return false;
-      if (toDate && r.dateIso > toDate) return false;
-    }
-    if (startTimeFrom && r.startTime < startTimeFrom) return false;
-    if (startTimeTo && r.startTime > startTimeTo) return false;
+    if (appliedUser !== ALL && r.user !== appliedUser) return false;
+    if (appliedRole !== ALL && r.role !== appliedRole) return false;
+    if (appliedStatus !== ALL && r.status !== appliedStatus) return false;
+    if (appliedActivityType !== ALL && r.lastActivity !== appliedActivityType) return false;
+    if (appliedDateFrom && r.dateIso < appliedDateFrom) return false;
+    if (appliedDateTo && r.dateIso > appliedDateTo) return false;
     return true;
   });
 
-  const completedCount = filteredActivity.filter((r) => r.status === "Completed").length;
-  const pendingCount = filteredActivity.filter((r) => r.status === "Pending").length;
-  const reworkCount = filteredActivity.filter((r) => r.rework).length;
-  const completedLabel = user === ALL ? "Completed" : `Jobs completed — ${user}`;
-
   const buildActivityFilterSummary = (): string[] => {
     const parts: string[] = [];
-    if (user !== ALL) parts.push(`User: ${user}`);
-    if (role !== ALL) parts.push(`Role: ${role}`);
-    if (status !== ALL) parts.push(`Job Status: ${status}`);
-    if (activityType !== ALL) parts.push(`Activity Type: ${activityType}`);
-    if (specificDate) parts.push(`Date: ${specificDate}`);
-    else {
-      if (fromDate) parts.push(`From: ${fromDate}`);
-      if (toDate) parts.push(`To: ${toDate}`);
-    }
-    if (startTimeFrom) parts.push(`Start time from: ${startTimeFrom}`);
-    if (startTimeTo) parts.push(`Start time to: ${startTimeTo}`);
+    if (appliedUser !== ALL) parts.push(`User: ${appliedUser}`);
+    if (appliedRole !== ALL) parts.push(`Role: ${appliedRole}`);
+    if (appliedStatus !== ALL) parts.push(`Job Status: ${appliedStatus}`);
+    if (appliedActivityType !== ALL) parts.push(`Activity Type: ${appliedActivityType}`);
+    if (appliedDateFrom) parts.push(`From: ${appliedDateFrom}`);
+    if (appliedDateTo) parts.push(`To: ${appliedDateTo}`);
     return parts.length > 0 ? [`Filters — ${parts.join(", ")}`] : ["Filters — none applied"];
   };
 
@@ -204,11 +189,38 @@ export function ReportsView() {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
 
+  const [appliedGranularity, setAppliedGranularity] = useState<Granularity>("Daily");
+  const [appliedDailyDate, setAppliedDailyDate] = useState("");
+  const [appliedCustomFrom, setAppliedCustomFrom] = useState("");
+  const [appliedCustomTo, setAppliedCustomTo] = useState("");
+
   const changeGranularity = (next: string) => {
     setGranularity(next as Granularity);
     setDailyDate("");
     setCustomFrom("");
     setCustomTo("");
+  };
+
+  const hasDateTimeFilters =
+    granularity !== "Daily" || !!dailyDate || !!customFrom || !!customTo ||
+    appliedGranularity !== "Daily" || !!appliedDailyDate || !!appliedCustomFrom || !!appliedCustomTo;
+
+  const applyDateTimeFilters = () => {
+    setAppliedGranularity(granularity);
+    setAppliedDailyDate(dailyDate);
+    setAppliedCustomFrom(customFrom);
+    setAppliedCustomTo(customTo);
+  };
+
+  const clearDateTimeFilters = () => {
+    setGranularity("Daily");
+    setDailyDate("");
+    setCustomFrom("");
+    setCustomTo("");
+    setAppliedGranularity("Daily");
+    setAppliedDailyDate("");
+    setAppliedCustomFrom("");
+    setAppliedCustomTo("");
   };
 
   const allStatDates = DAILY_JOB_STATS.map((d) => d.date);
@@ -217,50 +229,47 @@ export function ReportsView() {
 
   let periodStart = minStatDate;
   let periodEnd = maxStatDate;
-  let chartRows: { label: string; completed: number; pending: number }[];
-  const singleDayRow = granularity === "Daily" && dailyDate ? DAILY_JOB_STATS.find((d) => d.date === dailyDate) : undefined;
+  const singleDayRow = appliedGranularity === "Daily" && appliedDailyDate ? DAILY_JOB_STATS.find((d) => d.date === appliedDailyDate) : undefined;
 
-  if (granularity === "Daily") {
-    if (dailyDate) {
-      periodStart = dailyDate;
-      periodEnd = dailyDate;
-      chartRows = [];
+  if (appliedGranularity === "Daily") {
+    if (appliedDailyDate) {
+      periodStart = appliedDailyDate;
+      periodEnd = appliedDailyDate;
     } else {
       const last7 = DAILY_JOB_STATS.slice(-7);
       periodStart = last7[0].date;
       periodEnd = last7[last7.length - 1].date;
-      chartRows = last7.map((d) => ({ label: d.day, completed: d.completed, pending: d.pending }));
     }
-  } else if (granularity === "Weekly") {
-    chartRows = aggregateByBucket(DAILY_JOB_STATS, isoWeekBucketLabel);
-  } else if (granularity === "Monthly") {
-    chartRows = aggregateByBucket(DAILY_JOB_STATS, monthBucketLabel);
-  } else {
-    periodStart = customFrom || minStatDate;
-    periodEnd = customTo || maxStatDate;
-    const rangeRows = DAILY_JOB_STATS.filter((d) => d.date >= periodStart && d.date <= periodEnd);
-    chartRows = rangeRows.map((d) => ({ label: d.day, completed: d.completed, pending: d.pending }));
+  } else if (appliedGranularity === "Custom Range") {
+    periodStart = appliedCustomFrom || minStatDate;
+    periodEnd = appliedCustomTo || maxStatDate;
   }
-
-  const periodRows = DAILY_JOB_STATS.filter((d) => d.date >= periodStart && d.date <= periodEnd);
-  const totalCompletedPeriod = periodRows.reduce((sum, d) => sum + d.completed, 0);
-  const totalPendingPeriod = periodRows.reduce((sum, d) => sum + d.pending, 0);
 
   const periodActivityRows = USER_ACTIVITY_REPORT.filter((r) => r.dateIso >= periodStart && r.dateIso <= periodEnd);
   const periodUserSummaries = buildPeriodUserSummaries(periodActivityRows);
-  const periodMinutes = periodActivityRows
-    .map((r) => parseTurnaroundToMinutes(r.turnaround))
-    .filter((m): m is number => m !== null);
-  const avgProcessingTime = periodMinutes.length > 0
-    ? formatMinutes(periodMinutes.reduce((a, b) => a + b, 0) / periodMinutes.length)
-    : "1h 42m";
 
-  const periodDayCount = periodRows.length;
-  const periodLabel = periodDayCount === 1 ? "1 day" : `${periodDayCount} days`;
+  const downloadDateTimeReport = () => {
+    if (periodUserSummaries.length === 0) {
+      notify("No data to download for the selected period.");
+      return;
+    }
+    exportRowsAsCsv(
+      `date-time-report_${periodStart}_${periodEnd}.csv`,
+      periodUserSummaries.map((s) => ({
+        User: s.user,
+        "Jobs Completed": s.jobsCompleted,
+        "Jobs Pending": s.jobsPending,
+        "Rework Count": s.reworkCount,
+        "Avg Turnaround": s.avgTurnaround,
+      }))
+    );
+    logActivity({ action: "Download", module: "Reports", ref: `Date & Time Report (${periodStart} to ${periodEnd})` });
+    notify("Report downloaded.");
+  };
 
   // ---- Tab 3: Master Data & Document Download ----
-  const [datasetQuery, setDatasetQuery] = useState("");
-  const filteredDatasets = DOWNLOADABLE_DATASETS.filter((d) => d.name.toLowerCase().includes(datasetQuery.toLowerCase()));
+  const [selectedDatasetName, setSelectedDatasetName] = useState("");
+  const selectedDataset = DOWNLOADABLE_DATASETS.find((d) => d.name === selectedDatasetName);
 
   const [mdFromDate, setMdFromDate] = useState("");
   const [mdToDate, setMdToDate] = useState("");
@@ -280,6 +289,19 @@ export function ReportsView() {
     if (mdInvoiceNumber) parts.push(`Invoice ${mdInvoiceNumber}`);
     if (mdStatus !== ALL) parts.push(`Status ${mdStatus}`);
     return parts.join(", ");
+  };
+
+  const hasMasterDataFilters =
+    !!mdFromDate || !!mdToDate || !!mdJobNumber || mdCustomer !== ALL || mdUser !== ALL || !!mdInvoiceNumber || mdStatus !== ALL;
+
+  const clearMasterDataFilters = () => {
+    setMdFromDate("");
+    setMdToDate("");
+    setMdJobNumber("");
+    setMdCustomer(ALL);
+    setMdUser(ALL);
+    setMdInvoiceNumber("");
+    setMdStatus(ALL);
   };
 
   const downloadDataset = (id: string) => {
@@ -374,72 +396,47 @@ export function ReportsView() {
 
       {tab === "activity" && (
         <>
-          <div className="flex gap-4 flex-wrap mb-5">
-            <StatCard icon={CheckCircle2} label={completedLabel} value={String(completedCount)} accent={T.teal} />
-            <StatCard icon={AlertTriangle} label="Pending" value={String(pendingCount)} accent={T.brass} />
-            <StatCard icon={RefreshCcw} label="Required rework" value={String(reworkCount)} accent={T.rust} />
-          </div>
-
-          <div className="rounded-2xl p-4 mb-4 grid grid-cols-5 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-            <SelectField label="User" value={user} onChange={setUser} options={USER_OPTIONS} />
-            <SelectField label="Role" value={role} onChange={setRole} options={ROLE_OPTIONS} />
-            <SelectField label="Job Status" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
-            <SelectField label="Activity Type" value={activityType} onChange={setActivityType} options={ACTIVITY_OPTIONS} />
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>Specific Date</label>
-              <input
-                type="date"
-                value={specificDate}
-                onChange={(e) => setSpecificDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
+          <div className="rounded-2xl p-4 mb-4 flex flex-wrap gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+            <div className="w-[180px]">
+              <SelectField label="User" value={user} onChange={setUser} options={USER_OPTIONS} />
+            </div>
+            <div className="w-[180px]">
+              <SelectField label="Role" value={role} onChange={setRole} options={ROLE_OPTIONS} />
+            </div>
+            <div className="w-[180px]">
+              <SelectField label="Job Status" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
+            </div>
+            <div className="w-[180px]">
+              <SelectField label="Activity Type" value={activityType} onChange={setActivityType} options={ACTIVITY_OPTIONS} />
+            </div>
+            <div className="w-[240px]">
+              <DateRangePicker
+                label="Date Range"
+                from={draftDateFrom}
+                to={draftDateTo}
+                onApply={(f, t) => {
+                  setDraftDateFrom(f);
+                  setDraftDateTo(t);
+                }}
+                placeholder="Select date range"
+              />
+            </div>
+            <button
+              onClick={applyActivityFilters}
+              className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              Apply
+            </button>
+            {hasActivityFilters && (
+              <button
+                onClick={clearActivityFilters}
+                className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
                 style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl p-4 mb-4 grid grid-cols-5 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>From Date</label>
-              <input
-                type="date"
-                value={fromDate}
-                disabled={!!specificDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: specificDate ? T.mist : "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
-            </div>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To Date</label>
-              <input
-                type="date"
-                value={toDate}
-                disabled={!!specificDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: specificDate ? T.mist : "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
-            </div>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>Start Time From</label>
-              <input
-                type="time"
-                value={startTimeFrom}
-                onChange={(e) => setStartTimeFrom(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
-            </div>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>Start Time To</label>
-              <input
-                type="time"
-                value={startTimeTo}
-                onChange={(e) => setStartTimeTo(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
-            </div>
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 mb-4">
@@ -540,53 +537,45 @@ export function ReportsView() {
                 </div>
               </>
             )}
+            <div className="flex items-end gap-2">
+              <button
+                onClick={applyDateTimeFilters}
+                className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
+                style={{ background: T.brass, color: "#fff", ...fontBody }}
+              >
+                Apply
+              </button>
+              {hasDateTimeFilters && (
+                <button
+                  onClick={clearDateTimeFilters}
+                  className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
+                  style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {singleDayRow !== undefined ? (
             <div className="grid grid-cols-2 gap-4 mb-5">
-              <StatCard icon={CheckCircle2} label={`Completed — ${dailyDate}`} value={String(singleDayRow.completed)} accent={T.teal} />
-              <StatCard icon={AlertTriangle} label={`Pending — ${dailyDate}`} value={String(singleDayRow.pending)} accent={T.brass} />
+              <StatCard icon={CheckCircle2} label={`Completed — ${appliedDailyDate}`} value={String(singleDayRow.completed)} accent={T.teal} />
+              <StatCard icon={AlertTriangle} label={`Pending — ${appliedDailyDate}`} value={String(singleDayRow.pending)} accent={T.brass} />
             </div>
-          ) : granularity === "Daily" && dailyDate ? (
+          ) : appliedGranularity === "Daily" && appliedDailyDate ? (
             <div className="rounded-2xl p-5 mb-5 text-center text-[12.5px]" style={{ background: T.card, border: `1px solid ${T.hair}`, ...fontBody, color: T.slateSoft }}>
-              No data recorded for {dailyDate}.
+              No data recorded for {appliedDailyDate}.
             </div>
-          ) : (
-            <ChartCard
-              title={
-                granularity === "Daily"
-                  ? "Jobs completed vs. pending, last 7 days"
-                  : `Jobs completed vs. pending — ${granularity}`
-              }
-              sub="Daily processing volume across all users"
-            >
-              <div style={{ height: 220 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartRows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={T.hair} vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: T.slateSoft, fontFamily: "IBM Plex Mono" }} axisLine={{ stroke: T.hair }} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: T.slateSoft, fontFamily: "IBM Plex Mono" }} axisLine={false} tickLine={false} width={26} />
-                    <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
-                    <Bar dataKey="completed" name="Completed" fill={T.teal} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="pending" name="Pending" fill={T.brass} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center gap-4 mt-1">
-                <span className="flex items-center gap-1.5 text-[11px]" style={{ ...fontBody, color: T.slateSoft }}>
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: T.teal }} /> Completed
-                </span>
-                <span className="flex items-center gap-1.5 text-[11px]" style={{ ...fontBody, color: T.slateSoft }}>
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: T.brass }} /> Pending
-                </span>
-              </div>
-            </ChartCard>
-          )}
+          ) : null}
 
-          <div className="grid grid-cols-3 gap-4 mt-5 mb-6">
-            <StatCard icon={CheckCircle2} label={`Total completed (${periodLabel})`} value={String(totalCompletedPeriod)} accent={T.teal} />
-            <StatCard icon={AlertTriangle} label={`Total pending (${periodLabel})`} value={String(totalPendingPeriod)} accent={T.brass} />
-            <StatCard icon={CalendarClock} label="Avg. processing time" value={avgProcessingTime} accent={T.slate} />
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={downloadDateTimeReport}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              <Download size={13} /> Download
+            </button>
           </div>
 
           <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
@@ -617,62 +606,72 @@ export function ReportsView() {
 
       {tab === "downloads" && (
         <>
-          <div className="rounded-2xl p-4 mb-5 grid grid-cols-4 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>From Date</label>
-              <input
-                type="date"
-                value={mdFromDate}
-                onChange={(e) => setMdFromDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
+          <div className="rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+            <div className="w-[240px]">
+              <DateRangePicker label="Date Range" from={mdFromDate} to={mdToDate} onApply={(f, t) => { setMdFromDate(f); setMdToDate(t); }} placeholder="Select date range" />
             </div>
-            <div>
-              <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To Date</label>
-              <input
-                type="date"
-                value={mdToDate}
-                onChange={(e) => setMdToDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-              />
+            <div className="w-[180px]">
+              <Field label="Job Number" placeholder="e.g. JOB-000124" value={mdJobNumber} onChange={setMdJobNumber} />
             </div>
-            <Field label="Job Number" placeholder="e.g. JOB-000124" value={mdJobNumber} onChange={setMdJobNumber} />
-            <SelectField label="Customer" value={mdCustomer} onChange={setMdCustomer} options={CUSTOMER_OPTIONS} />
-            <SelectField label="User" value={mdUser} onChange={setMdUser} options={USER_OPTIONS} />
-            <Field label="Invoice Number" placeholder="e.g. INV-10041" value={mdInvoiceNumber} onChange={setMdInvoiceNumber} />
-            <SelectField label="Status" value={mdStatus} onChange={setMdStatus} options={JOB_STATUSES} />
+            <div className="w-[180px]">
+              <SelectField label="Customer" value={mdCustomer} onChange={setMdCustomer} options={CUSTOMER_OPTIONS} />
+            </div>
+            <div className="w-[180px]">
+              <SelectField label="User" value={mdUser} onChange={setMdUser} options={USER_OPTIONS} />
+            </div>
+            <div className="w-[180px]">
+              <Field label="Invoice Number" placeholder="e.g. INV-10041" value={mdInvoiceNumber} onChange={setMdInvoiceNumber} />
+            </div>
+            <div className="w-[180px]">
+              <SelectField label="Status" value={mdStatus} onChange={setMdStatus} options={JOB_STATUSES} />
+            </div>
+            {hasMasterDataFilters && (
+              <button
+                onClick={clearMasterDataFilters}
+                className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
+                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           <div className="mb-5 max-w-sm">
-            <Field label="Search datasets" value={datasetQuery} onChange={setDatasetQuery} placeholder="e.g. Customer, Job, Invoice" />
+            <SelectField
+              label="Search datasets"
+              value={selectedDatasetName || "Select a dataset"}
+              onChange={(v) => setSelectedDatasetName(v === "Select a dataset" ? "" : v)}
+              options={["Select a dataset", ...DOWNLOADABLE_DATASETS.map((d) => d.name)]}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {filteredDatasets.map((ds) => (
-              <div key={ds.id} className="rounded-2xl p-5 flex items-start justify-between gap-4" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: T.brassSoft }}>
-                    <Database size={16} color={T.brass} />
-                  </div>
-                  <div className="min-w-0">
-                    <div style={{ ...fontDisplay, color: T.ink, fontWeight: 600, fontSize: 14 }}>{ds.name}</div>
-                    <div style={{ ...fontBody, color: T.slateSoft, fontSize: 12, marginTop: 2 }}>{ds.description}</div>
-                    {ds.recordCount !== undefined && (
-                      <div style={{ ...fontMono, color: T.teal, fontSize: 11, marginTop: 6 }}>{ds.recordCount} records available</div>
-                    )}
-                  </div>
+
+          {selectedDataset ? (
+            <div className="rounded-2xl p-5 flex items-start justify-between gap-4 max-w-xl" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: T.brassSoft }}>
+                  <Database size={16} color={T.brass} />
                 </div>
-                <button
-                  onClick={() => downloadDataset(ds.id)}
-                  className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
-                  style={{ background: T.brass, color: "#fff", ...fontBody }}
-                >
-                  <Download size={13} /> Download
-                </button>
+                <div className="min-w-0">
+                  <div style={{ ...fontDisplay, color: T.ink, fontWeight: 600, fontSize: 14 }}>{selectedDataset.name}</div>
+                  <div style={{ ...fontBody, color: T.slateSoft, fontSize: 12, marginTop: 2 }}>{selectedDataset.description}</div>
+                  {selectedDataset.recordCount !== undefined && (
+                    <div style={{ ...fontMono, color: T.teal, fontSize: 11, marginTop: 6 }}>{selectedDataset.recordCount} records available</div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+              <button
+                onClick={() => downloadDataset(selectedDataset.id)}
+                className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
+                style={{ background: T.brass, color: "#fff", ...fontBody }}
+              >
+                <Download size={13} /> Download
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl p-5 max-w-xl text-center text-[12.5px]" style={{ background: T.card, border: `1px solid ${T.hair}`, ...fontBody, color: T.slateSoft }}>
+              Select a dataset above to view its details and download it.
+            </div>
+          )}
         </>
       )}
     </div>

@@ -5,8 +5,8 @@ import {
   PieChart, Pie, Cell, BarChart, Bar,
 } from "recharts";
 import { AlertTriangle, Briefcase, CheckCircle2, Clock, Download, Eye, FilePlus2, FileOutput, Filter, PenLine, XCircle } from "lucide-react";
-import { T, fontBody, fontDisplay, fontMono, tooltipItemStyle, tooltipLabelStyle, tooltipStyle } from "@/theme/tokens";
-import { ChartCard, PipelineStrip, SectionHeading, Stamp, StatCard, Td, Th, useToast } from "@/components/ui";
+import { T, fontBody, fontDisplay, tooltipItemStyle, tooltipLabelStyle, tooltipStyle } from "@/theme/tokens";
+import { ChartCard, DateRangePicker, PipelineStrip, SectionHeading, Stamp, StatCard, Td, Th, useToast } from "@/components/ui";
 import { ACCURACY_DATA, JOBS, JOB_STATUSES, STATUS_BREAKDOWN, TREND_DATA } from "@/data";
 import type { JobStatusFilter } from "@/data/jobs";
 import { paths } from "@/router/paths";
@@ -14,9 +14,9 @@ import type { Job } from "@/types";
 import { exportRowsAsCsv } from "@/features/reports/exportUtils";
 import { useAuditLog } from "@/features/administration/auditLog";
 
-function formatDot(date: string, time: string): string {
+function formatDot(date: string): string {
   const [y, m, d] = date.split("-");
-  return `${d}.${m}.${y} ${time.replace(":", ".")}`;
+  return `${d}.${m}.${y}`;
 }
 
 export function DashboardView() {
@@ -29,9 +29,7 @@ export function DashboardView() {
   const openCreateJob = () => navigate(paths.createJob);
 
   const [fromDate, setFromDate] = useState("");
-  const [fromTime, setFromTime] = useState("00:00");
   const [toDate, setToDate] = useState("");
-  const [toTime, setToTime] = useState("00:00");
 
   const cycleFilter = () => {
     const idx = JOB_STATUSES.indexOf(statusFilter);
@@ -39,9 +37,15 @@ export function DashboardView() {
   };
   const recentJobs = (statusFilter === "All" ? JOBS : JOBS.filter((j) => j.status === statusFilter)).slice(0, 5);
 
+  const applyPeriod = (from: string, to: string) => {
+    setFromDate(from);
+    setToDate(to);
+    notify(from ? `Period applied: ${formatDot(from)} — ${formatDot(to)}` : "Period cleared.");
+  };
+
   const downloadPeriodData = () => {
-    const from = fromDate ? new Date(`${fromDate}T${fromTime || "00:00"}`) : null;
-    const to = toDate ? new Date(`${toDate}T${toTime || "00:00"}`) : null;
+    const from = fromDate ? new Date(`${fromDate}T00:00`) : null;
+    const to = toDate ? new Date(`${toDate}T23:59`) : null;
     const rows = JOBS.filter((j) => {
       const d = new Date(j.created);
       if (from && d < from) return false;
@@ -49,7 +53,7 @@ export function DashboardView() {
       return true;
     });
 
-    const periodLabel = fromDate && toDate ? `FROM ${formatDot(fromDate, fromTime)} TO ${formatDot(toDate, toTime)}` : "ALL";
+    const periodLabel = fromDate && toDate ? `FROM ${formatDot(fromDate)} TO ${formatDot(toDate)}` : "ALL";
 
     exportRowsAsCsv(
       `dashboard-jobs_${fromDate || "all"}_${toDate || "all"}.csv`,
@@ -67,54 +71,24 @@ export function DashboardView() {
   };
 
   return (
-    <div className="px-8 py-7">
+    <div className="px-4 sm:px-6 lg:px-8 py-7 max-w-[1600px] mx-auto">
       <SectionHeading
         eyebrow="OPERATIONS OVERVIEW · 26 AUG 2026"
         title="Good afternoon, Priya."
         action={
           <div className="flex items-end gap-3 flex-wrap justify-end">
-            <div>
-              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
-                PERIOD — FROM (DD.MM.YYYY 00.00)
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
-                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-                />
-                <input
-                  type="time"
-                  value={fromTime}
-                  onChange={(e) => setFromTime(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
-                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-                />
-              </div>
+            <div className="w-[220px]">
+              <DateRangePicker label="PERIOD" from={fromDate} to={toDate} onApply={applyPeriod} placeholder="Select period" />
             </div>
-            <div>
-              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
-                TO (DD.MM.YYYY 00.00)
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
-                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-                />
-                <input
-                  type="time"
-                  value={toTime}
-                  onChange={(e) => setToTime(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
-                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-                />
-              </div>
-            </div>
+            {(fromDate || toDate) && (
+              <button
+                onClick={() => applyPeriod("", "")}
+                className="px-3.5 py-2 rounded-lg text-[12px] font-semibold"
+                style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+              >
+                Clear
+              </button>
+            )}
             <button
               onClick={downloadPeriodData}
               className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
@@ -143,8 +117,8 @@ export function DashboardView() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-3 gap-5 mb-6">
-        <ChartCard title="Jobs & documents, last 14 days" sub="Volume processed through the pipeline" className="col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+        <ChartCard title="Jobs & documents, last 14 days" sub="Volume processed through the pipeline" className="lg:col-span-2">
           <div style={{ height: 200 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={TREND_DATA} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -200,8 +174,8 @@ export function DashboardView() {
         </ChartCard>
       </div>
 
-      <div className="grid grid-cols-3 gap-5 mb-6">
-        <ChartCard title="Extraction accuracy by field" sub="Validated against ground-truth sample (approx. 95% target)" className="col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+        <ChartCard title="Extraction accuracy by field" sub="Validated against ground-truth sample (approx. 95% target)" className="lg:col-span-1">
           <div style={{ height: 190 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={ACCURACY_DATA} layout="vertical" margin={{ top: 4, right: 20, left: 8, bottom: 0 }}>
@@ -219,8 +193,8 @@ export function DashboardView() {
           </div>
         </ChartCard>
 
-        <div className="col-span-2 rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-          <div className="flex items-center justify-between px-6 pt-5 pb-4">
+        <div className="lg:col-span-2 rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+          <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-wrap gap-2">
             <div>
               <div style={{ ...fontDisplay, color: T.ink, fontSize: 17, fontWeight: 600 }}>Recent jobs</div>
               <div style={{ ...fontBody, color: T.slateSoft, fontSize: 12 }}>Live pipeline position for the latest shipments</div>
@@ -229,31 +203,33 @@ export function DashboardView() {
               <Filter size={13} /> {statusFilter === "All" ? "Filter" : statusFilter}
             </button>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr><Th>Job No.</Th><Th>Forwarder</Th><Th>Invoices</Th><Th>Pipeline</Th><Th>Status</Th><Th>Actions</Th></tr>
-            </thead>
-            <tbody>
-              {recentJobs.map((j) => (
-                <tr key={j.id} className="hover:bg-[#F5EDE4]">
-                  <Td mono><span style={{ fontWeight: 600, color: T.ink }}>{j.id}</span></Td>
-                  <Td>{j.forwarder}</Td>
-                  <Td mono>{j.invoices}</Td>
-                  <Td><PipelineStrip stage={j.stage} compact /></Td>
-                  <Td><Stamp status={j.status} /></Td>
-                  <Td>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => goJob(j)} aria-label={`View ${j.id}`}><Eye size={14} color={T.slateSoft} /></button>
-                      <button onClick={() => goEditJob(j)} aria-label={`Edit ${j.id}`}><PenLine size={14} color={T.brass} /></button>
-                    </div>
-                  </Td>
-                </tr>
-              ))}
-              {recentJobs.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-[12.5px]" style={{ ...fontBody, color: T.slateSoft }}>No jobs match "{statusFilter}".</td></tr>
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
+              <thead>
+                <tr><Th>Job No.</Th><Th>Forwarder</Th><Th>Invoices</Th><Th>Pipeline</Th><Th>Status</Th><Th>Actions</Th></tr>
+              </thead>
+              <tbody>
+                {recentJobs.map((j) => (
+                  <tr key={j.id} className="hover:bg-[#F5EDE4]">
+                    <Td mono><span style={{ fontWeight: 600, color: T.ink }}>{j.id}</span></Td>
+                    <Td>{j.forwarder}</Td>
+                    <Td mono>{j.invoices}</Td>
+                    <Td><PipelineStrip stage={j.stage} compact /></Td>
+                    <Td><Stamp status={j.status} /></Td>
+                    <Td>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => goJob(j)} aria-label={`View ${j.id}`}><Eye size={14} color={T.slateSoft} /></button>
+                        <button onClick={() => goEditJob(j)} aria-label={`Edit ${j.id}`}><PenLine size={14} color={T.brass} /></button>
+                      </div>
+                    </Td>
+                  </tr>
+                ))}
+                {recentJobs.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-[12.5px]" style={{ ...fontBody, color: T.slateSoft }}>No jobs match "{statusFilter}".</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

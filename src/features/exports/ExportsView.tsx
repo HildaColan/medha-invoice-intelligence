@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Clock, Download, FileOutput } from "lucide-react";
 import { T, fontBody, fontMono } from "@/theme/tokens";
-import { SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
+import { DateRangePicker, SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
 import { EXPORTS } from "@/data";
 import type { ExportRecord } from "@/types";
 import { useAuditLog } from "@/features/administration/auditLog";
@@ -12,9 +12,7 @@ export function ExportsView() {
   const [exportsList, setExportsList] = useState<ExportRecord[]>(EXPORTS);
 
   const [fromDate, setFromDate] = useState("");
-  const [fromTime, setFromTime] = useState("00:00");
   const [toDate, setToDate] = useState("");
-  const [toTime, setToTime] = useState("23:59");
   const [appliedRange, setAppliedRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
 
   const download = (file: ExportRecord) => {
@@ -24,17 +22,15 @@ export function ExportsView() {
   };
 
   const applyPeriodFilter = () => {
-    const from = fromDate ? new Date(`${fromDate}T${fromTime || "00:00"}`) : null;
-    const to = toDate ? new Date(`${toDate}T${toTime || "23:59"}`) : null;
+    const from = fromDate ? new Date(`${fromDate}T00:00`) : null;
+    const to = toDate ? new Date(`${toDate}T23:59`) : null;
     setAppliedRange({ from, to });
     notify(from || to ? "Period filter applied." : "Period filter cleared.");
   };
 
   const clearPeriodFilter = () => {
     setFromDate("");
-    setFromTime("00:00");
     setToDate("");
-    setToTime("23:59");
     setAppliedRange({ from: null, to: null });
   };
 
@@ -56,58 +52,35 @@ export function ExportsView() {
       </div>
 
       <div className="rounded-2xl p-4 mb-5 flex items-end gap-4 flex-wrap" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-        <div>
-          <label className="block text-[11px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>FROM</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            />
-            <input
-              type="time"
-              value={fromTime}
-              onChange={(e) => setFromTime(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-[11px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>TO</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            />
-            <input
-              type="time"
-              value={toTime}
-              onChange={(e) => setToTime(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-            />
-          </div>
+        <div className="w-[240px]">
+          <DateRangePicker
+            label="PERIOD"
+            from={fromDate}
+            to={toDate}
+            onApply={(f, t) => {
+              setFromDate(f);
+              setToDate(t);
+              if (!f) clearPeriodFilter();
+            }}
+            placeholder="Select date range"
+          />
         </div>
         <button
           onClick={applyPeriodFilter}
           className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
           style={{ background: T.brass, color: "#fff", ...fontBody }}
         >
-          Apply period
+          Apply
         </button>
-        <button
-          onClick={clearPeriodFilter}
-          className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
-          style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-        >
-          Clear
-        </button>
+        {(fromDate || toDate) && (
+          <button
+            onClick={clearPeriodFilter}
+            className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
+            style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>

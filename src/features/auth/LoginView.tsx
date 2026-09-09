@@ -5,7 +5,7 @@ import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths } from "@/router/paths";
 import { login } from "./authStore";
 import transorionLogo from "@/assets/transorion-logo.png";
-import medhaLogo from "@/assets/medha-logo-full.png";
+import medhaLogo from "@/assets/image (12).png";
 import { useAuditLog } from "@/features/administration/auditLog";
 
 export function LoginView() {
@@ -39,7 +39,7 @@ export function LoginView() {
       >
         <div>
           <div
-            className="rounded-lg px-3 py-2 inline-flex w-fit"
+            className="px-3 py-2 inline-flex w-fit"
             style={{ background: "#fff" }}
           >
             <img
@@ -56,24 +56,13 @@ export function LoginView() {
               ...fontDisplay,
               color: "#fff",
               fontWeight: 600,
-              fontSize: 30,
-              lineHeight: 1.25,
-              maxWidth: 320,
+              fontSize: 26,
+              lineHeight: 1.3,
             }}
           >
-            AI-Powered Invoice Intelligence
-          </div>
-          <div
-            style={{
-              ...fontBody,
-              color: "rgba(255,255,255,0.78)",
-              fontSize: 13,
-              marginTop: 14,
-              maxWidth: 320,
-            }}
-          >
-            AI-powered extraction, OCR, and validation for accurate, efficient
-            invoice processing.
+            Empowering Intelligence &amp;
+            <br />
+            Intellect
           </div>
         </div>
 
