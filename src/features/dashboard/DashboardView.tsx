@@ -72,67 +72,66 @@ export function DashboardView() {
         eyebrow="OPERATIONS OVERVIEW · 26 AUG 2026"
         title="Good afternoon, Priya."
         action={
-          <button
-            onClick={openCreateJob}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold"
-            style={{ background: T.brass, color: "#fff", ...fontBody }}
-          >
-            <FilePlus2 size={15} /> New Job
-          </button>
+          <div className="flex items-end gap-3 flex-wrap justify-end">
+            <div>
+              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
+                PERIOD — FROM (DD.MM.YYYY 00.00)
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+                />
+                <input
+                  type="time"
+                  value={fromTime}
+                  onChange={(e) => setFromTime(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
+                TO (DD.MM.YYYY 00.00)
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+                />
+                <input
+                  type="time"
+                  value={toTime}
+                  onChange={(e) => setToTime(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
+                />
+              </div>
+            </div>
+            <button
+              onClick={downloadPeriodData}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              <Download size={13} /> Download
+            </button>
+            <button
+              onClick={openCreateJob}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              <FilePlus2 size={15} /> New Job
+            </button>
+          </div>
         }
       />
-
-      <div className="rounded-2xl p-4 mb-6 flex items-end gap-4 flex-wrap" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-        <div>
-          <label className="block text-[11px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
-            PERIOD — FROM (DD.MM.YYYY 00.00)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            />
-            <input
-              type="time"
-              value={fromTime}
-              onChange={(e) => setFromTime(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-[11px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
-            TO (DD.MM.YYYY 00.00)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-            />
-            <input
-              type="time"
-              value={toTime}
-              onChange={(e) => setToTime(e.target.value)}
-              className="px-3 py-2 rounded-lg text-[12.5px] outline-none"
-              style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
-            />
-          </div>
-        </div>
-        <button
-          onClick={downloadPeriodData}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12.5px] font-semibold"
-          style={{ background: T.brass, color: "#fff", ...fontBody }}
-        >
-          <Download size={14} /> Download
-        </button>
-      </div>
 
       <div className="flex gap-4 flex-wrap mb-6">
         <StatCard icon={Briefcase} label="Total jobs this month" value="38" sub="+12%" accent={T.brass} />
