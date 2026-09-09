@@ -37,7 +37,7 @@ export function LoginView() {
         className="hidden lg:flex w-[440px] shrink-0 flex-col justify-between p-12"
         style={{ background: T.brassDeep }}
       >
-        <div className="flex justify-center">
+        <div>
           <div
             className="rounded-lg px-3 py-2 inline-flex w-fit"
             style={{ background: "#fff" }}
