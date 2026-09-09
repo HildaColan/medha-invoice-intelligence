@@ -7,11 +7,12 @@ import {
   UserCircle2, ChevronDown, ChevronRight, LogOut, Settings2, Boxes,
   Building2, BarChart3,
 } from "lucide-react";
-import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
+import { T, fontBody, fontMono } from "@/theme/tokens";
 import { paths, ADMIN_VIEWS } from "@/router/paths";
 import { logout } from "@/features/auth/authStore";
 import { useAuditLog } from "@/features/administration/auditLog";
 import type { AdminViewKey } from "@/types";
+import medhaLogo from "@/assets/medha-logo-full.png";
 
 interface NavItem {
   key: string;
@@ -62,13 +63,9 @@ export function Sidebar() {
 
   return (
     <aside className="w-[248px] shrink-0 h-screen sticky top-0 flex flex-col" style={{ background: T.brassDeep }}>
-      <div className="px-6 pt-7 pb-6 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.22)" }}>
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#fff" }}>
-          <span style={{ ...fontDisplay, color: T.brassDeep, fontWeight: 700, fontSize: 17 }}>M</span>
-        </div>
-        <div>
-          <div style={{ ...fontDisplay, color: "#fff", fontWeight: 600, fontSize: 18, letterSpacing: 0.3 }}>MEDHA</div>
-          <div style={{ ...fontMono, color: "rgba(255,255,255,0.75)", fontSize: 9.5, letterSpacing: "0.14em" }}>INVOICE INTELLIGENCE</div>
+      <div className="px-5 pt-6 pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.22)" }}>
+        <div className="rounded-xl px-3 py-3 flex items-center" style={{ background: "#fff" }}>
+          <img src={medhaLogo} alt="MEDHA — Invoice Intelligence" className="h-14 w-auto" />
         </div>
       </div>
 

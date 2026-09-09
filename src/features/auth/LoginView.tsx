@@ -5,7 +5,7 @@ import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { paths } from "@/router/paths";
 import { login } from "./authStore";
 import transorionLogo from "@/assets/transorion-logo.png";
-import medhaLogo from "@/assets/image (12).png";
+import medhaLogo from "@/assets/medha-logo-full.png";
 import { useAuditLog } from "@/features/administration/auditLog";
 
 export function LoginView() {
@@ -37,9 +37,9 @@ export function LoginView() {
         className="hidden lg:flex w-[440px] shrink-0 flex-col justify-between p-12"
         style={{ background: T.brassDeep }}
       >
-        <div>
+        <div className="flex justify-center">
           <div
-            className="px-3 py-2 inline-flex w-fit"
+            className="rounded-lg px-3 py-2 inline-flex w-fit"
             style={{ background: "#fff" }}
           >
             <img
