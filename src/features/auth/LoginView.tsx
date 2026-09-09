@@ -29,25 +29,62 @@ export function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ ...fontBody, background: T.mist }}>
+    <div
+      className="min-h-screen flex"
+      style={{ ...fontBody, background: T.mist }}
+    >
       <div
         className="hidden lg:flex w-[440px] shrink-0 flex-col justify-between p-12"
         style={{ background: T.brassDeep }}
       >
-        <div className="px-3 py-2  inline-flex w-fit" style={{ background: "#fff" }}>
-          <img src={medhaLogo} alt="MEDHA — Invoice Extraction AI" className="h-16 w-auto" />
+        <div>
+          <div
+            className="px-3 py-2 inline-flex w-fit"
+            style={{ background: "#fff" }}
+          >
+            <img
+              src={medhaLogo}
+              alt="MEDHA — Invoice Extraction AI"
+              className="h-16 w-auto"
+            />
+          </div>
         </div>
 
         <div>
-          <div style={{ ...fontDisplay, color: "#fff", fontWeight: 600, fontSize: 30, lineHeight: 1.25, maxWidth: 320 }}>
-            Invoice extraction, reconciled at scale.
+          <div
+            style={{
+              ...fontDisplay,
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 30,
+              lineHeight: 1.25,
+              maxWidth: 320,
+            }}
+          >
+            AI-Powered Invoice Intelligence
           </div>
-          <div style={{ ...fontBody, color: "rgba(255,255,255,0.78)", fontSize: 13, marginTop: 14, maxWidth: 320 }}>
-            Automated data capture, validation, and export across every forwarder and shipment.
+          <div
+            style={{
+              ...fontBody,
+              color: "rgba(255,255,255,0.78)",
+              fontSize: 13,
+              marginTop: 14,
+              maxWidth: 320,
+            }}
+          >
+            AI-powered extraction, OCR, and validation for accurate, efficient
+            invoice processing.
           </div>
         </div>
 
-        <div style={{ ...fontMono, color: "rgba(255,255,255,0.55)", fontSize: 10.5, letterSpacing: "0.05em" }}>
+        <div
+          style={{
+            ...fontMono,
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 10.5,
+            letterSpacing: "0.05em",
+          }}
+        >
           © {new Date().getFullYear()} Transorion. All rights reserved.
         </div>
       </div>
@@ -60,11 +97,36 @@ export function LoginView() {
           className="pointer-events-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-[100%] max-w-[1500px]"
           style={{ opacity: 0.05 }}
         />
-        <form onSubmit={handleSubmit} className="relative z-10 w-full max-w-[380px]">
+        <img
+          src={transorionLogo}
+          alt="Transorion"
+          className="absolute top-8 right-8 z-10 w-60 h-auto"
+        />
+        <form
+          onSubmit={handleSubmit}
+          className="relative z-10 w-full max-w-[380px]"
+        >
           <div className="mb-8">
-            <div style={{ ...fontDisplay, color: T.ink, fontWeight: 600, fontSize: 24 }}>Sign in</div>
-            <div style={{ ...fontBody, color: T.slateSoft, fontSize: 13, marginTop: 4 }}>
-              Welcome back. Enter your credentials to continue.
+            <div
+              style={{
+                ...fontDisplay,
+                color: T.ink,
+                fontWeight: 600,
+                fontSize: 24,
+              }}
+            >
+              Sign in
+            </div>
+            <div
+              style={{
+                ...fontBody,
+                color: T.slateSoft,
+                fontSize: 13,
+                marginTop: 4,
+              }}
+            >
+              Sign in to extract, validate, and export invoice data across every
+              forwarder and shipment.
             </div>
           </div>
 
@@ -72,7 +134,11 @@ export function LoginView() {
             <div>
               <label
                 className="block text-[11.5px] mb-1.5"
-                style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}
+                style={{
+                  ...fontMono,
+                  color: T.slateSoft,
+                  letterSpacing: "0.04em",
+                }}
               >
                 EMAIL
               </label>
@@ -96,7 +162,11 @@ export function LoginView() {
             <div>
               <label
                 className="block text-[11.5px] mb-1.5"
-                style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}
+                style={{
+                  ...fontMono,
+                  color: T.slateSoft,
+                  letterSpacing: "0.04em",
+                }}
               >
                 PASSWORD
               </label>
@@ -116,14 +186,25 @@ export function LoginView() {
               </div>
             </div>
 
-            {error && <div style={{ ...fontBody, color: T.rust, fontSize: 12 }}>{error}</div>}
+            {error && (
+              <div style={{ ...fontBody, color: T.rust, fontSize: 12 }}>
+                {error}
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-1">
-              <label className="flex items-center gap-2 text-[12px]" style={{ ...fontBody, color: T.slateSoft }}>
+              <label
+                className="flex items-center gap-2 text-[12px]"
+                style={{ ...fontBody, color: T.slateSoft }}
+              >
                 <input type="checkbox" style={{ accentColor: T.brass }} />
                 Remember me
               </label>
-              <button type="button" className="text-[12px] font-medium" style={{ ...fontBody, color: T.brass }}>
+              <button
+                type="button"
+                className="text-[12px] font-medium"
+                style={{ ...fontBody, color: T.brass }}
+              >
                 Forgot password?
               </button>
             </div>
@@ -137,7 +218,10 @@ export function LoginView() {
             </button>
           </div>
 
-          <div className="mt-6 text-center" style={{ ...fontMono, color: T.slateSoft, fontSize: 10.5 }}>
+          <div
+            className="mt-6 text-center"
+            style={{ ...fontMono, color: T.slateSoft, fontSize: 10.5 }}
+          >
             Demo access — any email &amp; password will sign you in.
           </div>
         </form>

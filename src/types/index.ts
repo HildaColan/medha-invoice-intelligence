@@ -81,6 +81,7 @@ export interface ValidationRule {
   ruleType: ValidationRuleType;
   condition: string;
   enabled: boolean;
+  template: string;
 }
 
 export interface OutputFieldMapping {

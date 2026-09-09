@@ -2,11 +2,20 @@ import { useState } from "react";
 import { PenLine, Plus, Trash2 } from "lucide-react";
 import { T, fontBody } from "@/theme/tokens";
 import { Field, Modal, SelectField, Td, Th, Toggle } from "@/components/ui";
-import { VALIDATION_RULES, VALIDATION_RULE_TYPES } from "@/data";
+import { ALL_TEMPLATES_OPTION, OUTPUT_TEMPLATES, VALIDATION_RULES, VALIDATION_RULE_TYPES } from "@/data";
 import type { ValidationRule, ValidationRuleType } from "@/types";
 import { useAuditLog } from "../auditLog";
 
-const EMPTY_RULE: ValidationRule = { id: "", field: "", ruleType: VALIDATION_RULE_TYPES[0], condition: "", enabled: true };
+const TEMPLATE_OPTIONS = [ALL_TEMPLATES_OPTION, ...OUTPUT_TEMPLATES.map((t) => t.name)];
+
+const EMPTY_RULE: ValidationRule = {
+  id: "",
+  field: "",
+  ruleType: VALIDATION_RULE_TYPES[0],
+  condition: "",
+  enabled: true,
+  template: ALL_TEMPLATES_OPTION,
+};
 
 function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -99,7 +108,7 @@ export function ValidationRulesPanel() {
       <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
         <table className="w-full">
           <thead>
-            <tr><Th>Field</Th><Th>Rule type</Th><Th>Condition</Th><Th>Status</Th><Th></Th></tr>
+            <tr><Th>Field</Th><Th>Rule type</Th><Th>Condition</Th><Th>Template</Th><Th>Status</Th><Th></Th></tr>
           </thead>
           <tbody>
             {rules.map((r) => (
@@ -107,6 +116,7 @@ export function ValidationRulesPanel() {
                 <Td mono>{r.field}</Td>
                 <Td>{r.ruleType}</Td>
                 <Td>{r.condition}</Td>
+                <Td>{r.template}</Td>
                 <Td>
                   <div className="flex items-center gap-2">
                     <Toggle on={r.enabled} onChange={() => toggleEnabled(r)} />
@@ -162,6 +172,12 @@ export function ValidationRulesPanel() {
             value={form.ruleType}
             onChange={(v) => setForm({ ...form, ruleType: v as ValidationRuleType })}
             options={VALIDATION_RULE_TYPES}
+          />
+          <SelectField
+            label="Template"
+            value={form.template}
+            onChange={(v) => setForm({ ...form, template: v })}
+            options={TEMPLATE_OPTIONS}
           />
           <Field label="Condition" value={form.condition} onChange={(v) => setForm({ ...form, condition: v })} />
         </div>
