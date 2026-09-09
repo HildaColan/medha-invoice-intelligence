@@ -1,15 +1,14 @@
-import { Briefcase, Building2, Camera, Clock, FileCheck2, FileOutput, MapPin } from "lucide-react";
+import { Building2, Camera, Clock, MapPin } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
-import { Field, SectionHeading, StatCard, Td, Th, useToast } from "@/components/ui";
-import { AUDIT } from "@/data";
+import { Field, SectionHeading, useToast } from "@/components/ui";
 
 const CURRENT_USER_NAME = "Priya Raghavan";
 
-const ACTIVITY_STATS = [
-  { icon: Briefcase, label: "Jobs created", value: "38", accent: T.brass },
-  { icon: FileOutput, label: "Exports generated", value: "19", accent: T.teal },
-  { icon: FileCheck2, label: "Validations approved", value: "112", accent: T.slate },
-] as const;
+// const ACTIVITY_STATS = [
+//   { icon: Briefcase, label: "Jobs created", value: "38", accent: T.brass },
+//   { icon: FileOutput, label: "Exports generated", value: "19", accent: T.teal },
+//   { icon: FileCheck2, label: "Validations approved", value: "112", accent: T.slate },
+// ] as const;
 
 export function ProfileView() {
   const notify = useToast();
@@ -36,7 +35,7 @@ export function ProfileView() {
           <div style={{ ...fontDisplay, color: T.ink, fontSize: 17, fontWeight: 600, marginTop: 14 }}>{CURRENT_USER_NAME}</div>
           <div style={{ ...fontMono, color: T.slateSoft, fontSize: 11, marginTop: 2 }}>admin@transorion.com</div>
           <span className="mt-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold" style={{ ...fontMono, background: T.tealSoft, color: T.teal }}>
-            Administrator
+            Director
           </span>
           <div className="w-full mt-5 pt-5 flex flex-col gap-2.5" style={{ borderTop: `1px solid ${T.hair}` }}>
             <span className="flex items-center gap-2 text-[12px]" style={{ ...fontBody, color: T.slate }}>
@@ -68,13 +67,13 @@ export function ProfileView() {
             <Field label="Job title" value="Trade Operations Lead" />
             <Field label="Email address" value="admin@transorion.com" mono />
             <Field label="Phone number" value="+91 98400 12345" mono />
-            <Field label="Department" value="Trade Compliance" />
-            <Field label="Role" value="Administrator" disabled />
+            {/* <Field label="Department" value="Trade Compliance" /> */}
+            <Field label="Role" value="Director" disabled />
           </div>
         </div>
       </div>
 
-      <SectionHeading title="Activity summary" />
+      {/* <SectionHeading title="Activity summary" />
       <div className="flex gap-4 flex-wrap mb-6">
         {ACTIVITY_STATS.map((s) => (
           <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} />
@@ -100,7 +99,7 @@ export function ProfileView() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div> */}
     </div>
   );
 }

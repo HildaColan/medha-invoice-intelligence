@@ -4,20 +4,34 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, BarChart, Bar,
 } from "recharts";
-import { AlertTriangle, Briefcase, CheckCircle2, Clock, Eye, FilePlus2, FileOutput, Filter, PenLine, XCircle } from "lucide-react";
-import { T, fontBody, fontDisplay, tooltipItemStyle, tooltipLabelStyle, tooltipStyle } from "@/theme/tokens";
-import { ChartCard, PipelineStrip, SectionHeading, Stamp, StatCard, Td, Th } from "@/components/ui";
+import { AlertTriangle, Briefcase, CheckCircle2, Clock, Download, Eye, FilePlus2, FileOutput, Filter, PenLine, XCircle } from "lucide-react";
+import { T, fontBody, fontDisplay, fontMono, tooltipItemStyle, tooltipLabelStyle, tooltipStyle } from "@/theme/tokens";
+import { ChartCard, PipelineStrip, SectionHeading, Stamp, StatCard, Td, Th, useToast } from "@/components/ui";
 import { ACCURACY_DATA, JOBS, JOB_STATUSES, STATUS_BREAKDOWN, TREND_DATA } from "@/data";
 import type { JobStatusFilter } from "@/data/jobs";
 import { paths } from "@/router/paths";
 import type { Job } from "@/types";
+import { exportRowsAsCsv } from "@/features/reports/exportUtils";
+import { useAuditLog } from "@/features/administration/auditLog";
+
+function formatDot(date: string, time: string): string {
+  const [y, m, d] = date.split("-");
+  return `${d}.${m}.${y} ${time.replace(":", ".")}`;
+}
 
 export function DashboardView() {
   const navigate = useNavigate();
+  const notify = useToast();
+  const { logActivity } = useAuditLog();
   const [statusFilter, setStatusFilter] = useState<JobStatusFilter>("All");
   const goJob = (job: Job) => navigate(paths.jobDetail(job.id));
   const goEditJob = (job: Job) => navigate(paths.jobEdit(job.id));
   const openCreateJob = () => navigate(paths.createJob);
+
+  const [fromDate, setFromDate] = useState("");
+  const [fromTime, setFromTime] = useState("00:00");
+  const [toDate, setToDate] = useState("");
+  const [toTime, setToTime] = useState("00:00");
 
   const cycleFilter = () => {
     const idx = JOB_STATUSES.indexOf(statusFilter);
@@ -25,19 +39,97 @@ export function DashboardView() {
   };
   const recentJobs = (statusFilter === "All" ? JOBS : JOBS.filter((j) => j.status === statusFilter)).slice(0, 5);
 
+  const downloadPeriodData = () => {
+    const from = fromDate ? new Date(`${fromDate}T${fromTime || "00:00"}`) : null;
+    const to = toDate ? new Date(`${toDate}T${toTime || "00:00"}`) : null;
+    const rows = JOBS.filter((j) => {
+      const d = new Date(j.created);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+
+    const periodLabel = fromDate && toDate ? `FROM ${formatDot(fromDate, fromTime)} TO ${formatDot(toDate, toTime)}` : "ALL";
+
+    exportRowsAsCsv(
+      `dashboard-jobs_${fromDate || "all"}_${toDate || "all"}.csv`,
+      rows.map((j) => ({
+        "Job No.": j.id,
+        Shipment: j.shipment,
+        Forwarder: j.forwarder,
+        Invoices: j.invoices,
+        Created: j.created,
+        Status: j.status,
+      }))
+    );
+    notify(`Downloaded ${rows.length} job(s) for period ${periodLabel}.`);
+    logActivity({ action: "Download", module: "Dashboard", ref: periodLabel, result: "Success" });
+  };
+
   return (
     <div className="px-8 py-7">
       <SectionHeading
         eyebrow="OPERATIONS OVERVIEW · 26 AUG 2026"
         title="Good afternoon, Priya."
         action={
-          <button
-            onClick={openCreateJob}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold"
-            style={{ background: T.brass, color: "#fff", ...fontBody }}
-          >
-            <FilePlus2 size={15} /> New Job
-          </button>
+          <div className="flex items-end gap-3 flex-wrap justify-end">
+            <div>
+              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
+                PERIOD — FROM (DD.MM.YYYY 00.00)
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+                />
+                <input
+                  type="time"
+                  value={fromTime}
+                  onChange={(e) => setFromTime(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] mb-1" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>
+                TO (DD.MM.YYYY 00.00)
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+                />
+                <input
+                  type="time"
+                  value={toTime}
+                  onChange={(e) => setToTime(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
+                  style={{ border: `1px solid ${T.hair}`, ...fontMono, color: T.slate }}
+                />
+              </div>
+            </div>
+            <button
+              onClick={downloadPeriodData}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[12px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              <Download size={13} /> Download
+            </button>
+            <button
+              onClick={openCreateJob}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold"
+              style={{ background: T.brass, color: "#fff", ...fontBody }}
+            >
+              <FilePlus2 size={15} /> New Job
+            </button>
+          </div>
         }
       />
 

@@ -10,8 +10,8 @@ export function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/jobs/")) return pathname.split("/").pop() ?? "Job";
   if (pathname === "/exports") return "Exports";
   if (pathname === "/notifications") return "Notifications";
+  if (pathname === "/reports") return "Reports";
   if (pathname.startsWith("/administration")) return "Administration";
   if (pathname === "/profile") return "My Profile";
-  if (pathname === "/account-settings") return "Account Settings";
   return "MEDHA";
 }

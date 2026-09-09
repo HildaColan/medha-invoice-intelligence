@@ -3,8 +3,9 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2, CircleAlert, PenLine } from "lucide-react";
 import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
 import { PipelineStrip, Stamp, Td, Th, useToast } from "@/components/ui";
-import { JOBS, LINE_ITEMS } from "@/data";
+import { JOBS, JOB_INVOICES, LINE_ITEMS } from "@/data";
 import { paths } from "@/router/paths";
+import { diffFields, useAuditLog } from "@/features/administration/auditLog";
 
 interface SummaryField {
   label: string;
@@ -13,7 +14,7 @@ interface SummaryField {
 }
 
 const INITIAL_SUMMARY: SummaryField[] = [
-  { label: "Invoice Number", val: "INV-10041", mono: true },
+  { label: "Total Invoice Numbers", val: String(JOB_INVOICES.length), mono: true },
   { label: "Supplier", val: "ABC Technologies Pte Ltd", mono: false },
   { label: "Currency", val: "USD", mono: true },
   { label: "Invoice Total", val: "USD 5,388.00", mono: true },
@@ -25,10 +26,12 @@ export function JobDetailView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const notify = useToast();
+  const { logActivity } = useAuditLog();
   const job = JOBS.find((j) => j.id === id);
 
   const [editMode, setEditMode] = useState(false);
   const [summary, setSummary] = useState<SummaryField[]>(INITIAL_SUMMARY);
+  const [editSnapshot, setEditSnapshot] = useState<SummaryField[] | null>(null);
 
   // Unknown job id — fall back to the jobs list rather than rendering a blank page.
   if (!job) return <Navigate to={paths.jobs} replace />;
@@ -40,12 +43,31 @@ export function JobDetailView() {
   };
 
   const toggleEdit = () => {
-    if (editMode) notify("Field changes saved.");
+    if (editMode) {
+      notify("Field changes saved.");
+      if (editSnapshot) {
+        const previousMap: Record<string, string> = {};
+        editSnapshot.forEach((f) => {
+          previousMap[f.label] = f.val;
+        });
+        const updatedMap: Record<string, string> = {};
+        summary.forEach((f) => {
+          updatedMap[f.label] = f.val;
+        });
+        diffFields(previousMap, updatedMap).forEach(({ field, from, to }) => {
+          logActivity({ action: "Update", module: "Job Review", ref: job.id, previousValue: `${field}: ${from}`, updatedValue: to });
+        });
+      }
+      setEditSnapshot(null);
+    } else {
+      setEditSnapshot(summary);
+    }
     setEditMode(!editMode);
   };
 
   const consolidate = () => {
     notify(`CSV generated for ${job.id} — check the Exports section.`);
+    logActivity({ action: "Download", module: "Exports", ref: job.id });
     navigate(paths.exports);
   };
 
@@ -84,6 +106,42 @@ export function JobDetailView() {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="rounded-2xl overflow-hidden mb-6" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+        <div className="px-6 pt-5 pb-4 flex items-center justify-between">
+          <div>
+            <div style={{ ...fontDisplay, color: T.ink, fontSize: 16, fontWeight: 600 }}>Invoice numbers</div>
+            <div style={{ ...fontBody, color: T.slateSoft, fontSize: 11.5, marginTop: 1 }}>
+              Captured automatically from the extracted documents
+            </div>
+          </div>
+          <div style={{ ...fontMono, color: T.slateSoft, fontSize: 11 }}>{JOB_INVOICES.length} total</div>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr><Th>Invoice Number</Th><Th>Source File</Th><Th>Status</Th></tr>
+          </thead>
+          <tbody>
+            {JOB_INVOICES.map((inv) => (
+              <tr key={inv.id} style={inv.status === "Duplicate" ? { background: T.rustSoft } : undefined}>
+                <Td mono><span style={{ fontWeight: 600, color: T.ink }}>{inv.number}</span></Td>
+                <Td mono>{inv.sourceFile}</Td>
+                <Td>
+                  {inv.status === "Duplicate" ? (
+                    <span className="flex items-center gap-1 text-[12px]" style={{ ...fontBody, color: T.rust, fontWeight: 600 }}>
+                      <CircleAlert size={13} /> Duplicate — already processed in {inv.duplicateOf}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[12px]" style={{ ...fontBody, color: T.teal, fontWeight: 600 }}>
+                      <CheckCircle2 size={13} /> New
+                    </span>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="rounded-2xl overflow-hidden mb-6" style={{ background: T.card, border: `1px solid ${T.hair}` }}>

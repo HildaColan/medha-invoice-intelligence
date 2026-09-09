@@ -5,10 +5,14 @@ import {
   LayoutDashboard, Briefcase, FilePlus2, FileOutput, Bell,
   ShieldCheck, SlidersHorizontal, ListChecks, ScrollText, Users,
   UserCircle2, ChevronDown, ChevronRight, LogOut, Settings2, Boxes,
+  Building2, BarChart3,
 } from "lucide-react";
-import { T, fontBody, fontDisplay, fontMono } from "@/theme/tokens";
+import { T, fontBody, fontMono } from "@/theme/tokens";
 import { paths, ADMIN_VIEWS } from "@/router/paths";
+import { logout } from "@/features/auth/authStore";
+import { useAuditLog } from "@/features/administration/auditLog";
 import type { AdminViewKey } from "@/types";
+import medhaLogo from "@/assets/medha-logo-full.png";
 
 interface NavItem {
   key: string;
@@ -24,12 +28,14 @@ const NAV: NavItem[] = [
   { key: "createJob", label: "Create Job", icon: FilePlus2, path: paths.createJob },
   { key: "exports", label: "Exports", icon: FileOutput, path: paths.exports },
   { key: "notifications", label: "Notifications", icon: Bell, path: paths.notifications, badge: 3 },
+  { key: "reports", label: "Reports", icon: BarChart3, path: paths.reports },
 ];
 
 const ADMIN_LABELS: Record<AdminViewKey, string> = {
   users: "Users",
   roles: "Roles",
   productMaster: "Product Master",
+  customerMaster: "Customer Master",
   masters: "Masters",
   validationRules: "Validation Rules",
   outputMapping: "Output Mapping",
@@ -40,6 +46,7 @@ const ADMIN_ICONS: Record<AdminViewKey, LucideIcon> = {
   users: Users,
   roles: ShieldCheck,
   productMaster: Boxes,
+  customerMaster: Building2,
   masters: Settings2,
   validationRules: ListChecks,
   outputMapping: SlidersHorizontal,
@@ -50,18 +57,15 @@ export function Sidebar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logActivity } = useAuditLog();
 
   const isAdminRoute = location.pathname.startsWith("/administration");
 
   return (
     <aside className="w-[248px] shrink-0 h-screen sticky top-0 flex flex-col" style={{ background: T.brassDeep }}>
-      <div className="px-6 pt-7 pb-6 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.22)" }}>
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#fff" }}>
-          <span style={{ ...fontDisplay, color: T.brassDeep, fontWeight: 700, fontSize: 17 }}>M</span>
-        </div>
-        <div>
-          <div style={{ ...fontDisplay, color: "#fff", fontWeight: 600, fontSize: 18, letterSpacing: 0.3 }}>MEDHA</div>
-          <div style={{ ...fontMono, color: "rgba(255,255,255,0.75)", fontSize: 9.5, letterSpacing: "0.14em" }}>INVOICE INTELLIGENCE</div>
+      <div className="px-5 pt-6 pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.22)" }}>
+        <div className="rounded-xl px-3 py-3 flex items-center" style={{ background: "#fff" }}>
+          <img src={medhaLogo} alt="MEDHA — Invoice Intelligence" className="h-14 w-auto" />
         </div>
       </div>
 
@@ -125,18 +129,28 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="px-3 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.22)" }}>
+      <div
+        className="flex items-center gap-1 px-3 py-4"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.22)" }}
+      >
         <button
           onClick={() => navigate(paths.profile)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg"
+          className="flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 rounded-lg text-left"
           style={{ background: "rgba(255,255,255,0.16)" }}
         >
           <UserCircle2 size={20} color="#fff" />
-          <div className="text-left flex-1">
+          <div className="min-w-0">
             <div style={{ ...fontBody, color: "#fff", fontSize: 12.5, fontWeight: 600 }}>My Profile</div>
             <div style={{ ...fontMono, color: "rgba(255,255,255,0.75)", fontSize: 10 }}>admin@transorion.com</div>
           </div>
-          <LogOut size={14} color="rgba(255,255,255,0.75)" />
+        </button>
+        <button
+          onClick={() => { logActivity({ action: "Logout", module: "Auth" }); logout(); navigate(paths.login, { replace: true }); }}
+          title="Log out"
+          className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
+          style={{ background: "rgba(255,255,255,0.16)" }}
+        >
+          <LogOut size={15} color="#fff" />
         </button>
       </div>
     </aside>

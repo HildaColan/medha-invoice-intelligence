@@ -1,6 +1,7 @@
 import type { AdminViewKey } from "@/types";
 
 export const paths = {
+  login: "/login",
   dashboard: "/",
   jobs: "/jobs",
   createJob: "/jobs/new",
@@ -8,15 +9,16 @@ export const paths = {
   jobEdit: (id: string) => `/jobs/${id}/edit`,
   exports: "/exports",
   notifications: "/notifications",
+  reports: "/reports",
   administration: (view: AdminViewKey = "users") => `/administration/${view}`,
   profile: "/profile",
-  accountSettings: "/account-settings",
 } as const;
 
 export const ADMIN_VIEWS: AdminViewKey[] = [
   "users",
   "roles",
   "productMaster",
+  "customerMaster",
   "masters",
   "validationRules",
   "outputMapping",
