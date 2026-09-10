@@ -9,12 +9,12 @@ export const paths = {
   jobEdit: (id: string) => `/jobs/${id}/edit`,
   exports: "/exports",
   notifications: "/notifications",
-  reports: "/reports",
   administration: (view: AdminViewKey = "users") => `/administration/${view}`,
   profile: "/profile",
 } as const;
 
 export const ADMIN_VIEWS: AdminViewKey[] = [
+  "reports",
   "users",
   "roles",
   "productMaster",

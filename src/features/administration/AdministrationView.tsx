@@ -10,8 +10,11 @@ import { ProductMasterPanel } from "./panels/ProductMasterPanel";
 import { RolesPanel } from "./panels/RolesPanel";
 import { UsersPanel } from "./panels/UsersPanel";
 import { ValidationRulesPanel } from "./panels/ValidationRulesPanel";
+import { ReportsView } from "@/features/reports/ReportsView";
 
-const TITLES: Record<AdminViewKey, string> = {
+type WrappedAdminViewKey = Exclude<AdminViewKey, "reports">;
+
+const TITLES: Record<WrappedAdminViewKey, string> = {
   users: "Users",
   roles: "Roles & permissions",
   productMaster: "Product master",
@@ -22,7 +25,7 @@ const TITLES: Record<AdminViewKey, string> = {
   auditLogs: "Audit logs",
 };
 
-const PANELS: Record<AdminViewKey, () => JSX.Element> = {
+const PANELS: Record<WrappedAdminViewKey, () => JSX.Element> = {
   users: UsersPanel,
   roles: RolesPanel,
   productMaster: ProductMasterPanel,
@@ -34,14 +37,18 @@ const PANELS: Record<AdminViewKey, () => JSX.Element> = {
 };
 
 function isAdminViewKey(value: string | undefined): value is AdminViewKey {
-  return !!value && value in TITLES;
+  return !!value && (value === "reports" || value in TITLES);
 }
 
 export function AdministrationView() {
   const { view } = useParams<{ view: string }>();
 
   if (!isAdminViewKey(view)) {
-    return <Navigate to={paths.administration("users")} replace />;
+    return <Navigate to={paths.administration("reports")} replace />;
+  }
+
+  if (view === "reports") {
+    return <ReportsView />;
   }
 
   const Panel = PANELS[view];

@@ -190,7 +190,8 @@ export type AdminViewKey =
   | "masters"
   | "validationRules"
   | "outputMapping"
-  | "auditLogs";
+  | "auditLogs"
+  | "reports";
 
 export type PermissionAction = "view" | "create" | "edit" | "delete";
 

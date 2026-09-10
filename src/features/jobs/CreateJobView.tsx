@@ -156,7 +156,7 @@ export function CreateJobView() {
             <SelectField label="PORT CODE" value={form.portCode} onChange={setField("portCode")} options={PORT_CODE_OPTIONS} mono />
             <SelectField label="LOCATION" value={form.location} onChange={setField("location")} options={LOCATION_OPTIONS} />
             <SelectField label="BILLING CUSTOMER" value={form.billingCustomer} onChange={setField("billingCustomer")} options={BILLING_CUSTOMER_OPTIONS} />
-            <SelectField label="IMPORTER" value={form.importer} onChange={setField("importer")} options={IMPORTER_EXPORTER_OPTIONS} />
+            <SelectField label="IMPORTER/EXPORTER" value={form.importer} onChange={setField("importer")} options={IMPORTER_EXPORTER_OPTIONS} />
             <SelectField label="EXPORTER" value={form.exporter} onChange={setField("exporter")} options={IMPORTER_EXPORTER_OPTIONS} />
             <SelectField label="TEMPLATE" value={form.template} onChange={setField("template")} options={TEMPLATE_OPTIONS} />
             <Field label="INVOICE NUMBER (if known)" value={form.invoiceNumber} onChange={setField("invoiceNumber")} placeholder="Optional" mono />

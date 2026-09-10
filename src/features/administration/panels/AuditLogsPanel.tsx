@@ -24,17 +24,40 @@ export function AuditLogsPanel() {
   const [toDate, setToDate] = useState("");
   const [refQuery, setRefQuery] = useState("");
 
+  const [appliedUser, setAppliedUser] = useState(ALL);
+  const [appliedModule, setAppliedModule] = useState(ALL);
+  const [appliedAction, setAppliedAction] = useState(ALL);
+  const [appliedResult, setAppliedResult] = useState<string>(ALL);
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
+  const [appliedRefQuery, setAppliedRefQuery] = useState("");
+
   const filtered = entries.filter((a) => {
-    if (user !== ALL && a.user !== user) return false;
-    if (module !== ALL && a.module !== module) return false;
-    if (action !== ALL && a.action !== action) return false;
-    if (result !== ALL && a.result !== result) return false;
-    if (refQuery && !a.ref.toLowerCase().includes(refQuery.toLowerCase())) return false;
+    if (appliedUser !== ALL && a.user !== appliedUser) return false;
+    if (appliedModule !== ALL && a.module !== appliedModule) return false;
+    if (appliedAction !== ALL && a.action !== appliedAction) return false;
+    if (appliedResult !== ALL && a.result !== appliedResult) return false;
+    if (appliedRefQuery && !a.ref.toLowerCase().includes(appliedRefQuery.toLowerCase())) return false;
     const entryDate = new Date(a.time.replace(",", ""));
-    if (fromDate && entryDate < new Date(fromDate)) return false;
-    if (toDate && entryDate > new Date(`${toDate}T23:59:59`)) return false;
+    if (appliedFromDate && entryDate < new Date(appliedFromDate)) return false;
+    if (appliedToDate && entryDate > new Date(`${appliedToDate}T23:59:59`)) return false;
     return true;
   });
+
+  const hasFilters =
+    user !== ALL || module !== ALL || action !== ALL || result !== ALL || !!fromDate || !!toDate || !!refQuery ||
+    appliedUser !== ALL || appliedModule !== ALL || appliedAction !== ALL || appliedResult !== ALL ||
+    !!appliedFromDate || !!appliedToDate || !!appliedRefQuery;
+
+  const applyFilters = () => {
+    setAppliedUser(user);
+    setAppliedModule(module);
+    setAppliedAction(action);
+    setAppliedResult(result);
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+    setAppliedRefQuery(refQuery);
+  };
 
   const clearFilters = () => {
     setUser(ALL);
@@ -44,6 +67,13 @@ export function AuditLogsPanel() {
     setFromDate("");
     setToDate("");
     setRefQuery("");
+    setAppliedUser(ALL);
+    setAppliedModule(ALL);
+    setAppliedAction(ALL);
+    setAppliedResult(ALL);
+    setAppliedFromDate("");
+    setAppliedToDate("");
+    setAppliedRefQuery("");
   };
 
   return (
@@ -84,13 +114,24 @@ export function AuditLogsPanel() {
           />
         </div>
         <Field label="Job / Reference" placeholder="e.g. JOB-000124" value={refQuery} onChange={setRefQuery} />
-        <button
-          onClick={clearFilters}
-          className="px-3.5 py-2.5 rounded-lg text-[12.5px] font-semibold h-[38px]"
-          style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-        >
-          Clear
-        </button>
+        <div className="flex items-end gap-2">
+          <button
+            onClick={applyFilters}
+            className="px-4 py-2.5 rounded-lg text-[12.5px] font-semibold h-[38px]"
+            style={{ background: T.brass, color: "#fff", ...fontBody }}
+          >
+            Apply
+          </button>
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="px-3.5 py-2.5 rounded-lg text-[12.5px] font-semibold h-[38px]"
+              style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
