@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
-import { T, fontBody, fontMono } from "@/theme/tokens";
-import { Field, SelectField, Td, Th } from "@/components/ui";
+import { T, fontBody } from "@/theme/tokens";
+import { DateRangePicker, Field, SelectField, Td, Th } from "@/components/ui";
 import { useAuditLog } from "../auditLog";
 
 const ALL = "All";
@@ -87,33 +87,25 @@ export function AuditLogsPanel() {
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 mb-5 grid grid-cols-4 gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
-        <SelectField label="User" value={user} onChange={setUser} options={userOptions} />
-        <SelectField label="Module" value={module} onChange={setModule} options={moduleOptions} />
-        <SelectField label="Activity Type" value={action} onChange={setAction} options={actionOptions} />
-        <SelectField label="Status" value={result} onChange={setResult} options={resultOptions} />
-
-        <div>
-          <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>From</label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-            style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-          />
+      <div className="rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-end" style={{ background: T.card, border: `1px solid ${T.hair}` }}>
+        <div className="w-[200px]">
+          <SelectField label="User" value={user} onChange={setUser} options={userOptions} />
         </div>
-        <div>
-          <label className="block text-[11.5px] mb-1.5" style={{ ...fontMono, color: T.slateSoft, letterSpacing: "0.04em" }}>To</label>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-lg outline-none text-[12.5px]"
-            style={{ background: "#fff", border: `1px solid ${T.hair}`, ...fontBody, color: T.slate }}
-          />
+        <div className="w-[200px]">
+          <SelectField label="Module" value={module} onChange={setModule} options={moduleOptions} />
         </div>
-        <Field label="Job / Reference" placeholder="e.g. JOB-000124" value={refQuery} onChange={setRefQuery} />
+        <div className="w-[200px]">
+          <SelectField label="Activity Type" value={action} onChange={setAction} options={actionOptions} />
+        </div>
+        <div className="w-[180px]">
+          <SelectField label="Status" value={result} onChange={setResult} options={resultOptions} />
+        </div>
+        <div className="w-[260px]">
+          <DateRangePicker label="Date Range" from={fromDate} to={toDate} onApply={(f, t) => { setFromDate(f); setToDate(t); }} placeholder="Select date range" />
+        </div>
+        <div className="w-[220px]">
+          <Field label="Job / Reference" placeholder="e.g. JOB-000124" value={refQuery} onChange={setRefQuery} />
+        </div>
         <div className="flex items-end gap-2">
           <button
             onClick={applyFilters}
@@ -138,7 +130,7 @@ export function AuditLogsPanel() {
         <table className="w-full">
           <thead>
             <tr>
-              <Th>User</Th><Th>Action</Th><Th>Module</Th><Th>Reference</Th>
+              <Th>User/UserId</Th><Th>Action</Th><Th>Module</Th><Th>Reference</Th>
               <Th>Previous → Updated</Th><Th>Status</Th><Th>Timestamp</Th>
             </tr>
           </thead>
